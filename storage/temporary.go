@@ -2,6 +2,7 @@ package storage
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 
@@ -13,15 +14,15 @@ var connection redis.Conn
 func init() {
 	var err error
 	connection, err = redis.DialURL(
-        fmt.Sprintf(
-            "redis://%s:%s@%s:%s/%s",
-            os.Getenv("REDIS_USER"),
-            os.Getenv("REDIS_SECRET"),
-            os.Getenv("REDIS_HOST"),
-            os.Getenv("REDIS_PORT"),
-            os.Getenv("REDIS_DB_NUMBER")
-        ),
-    )
+		fmt.Sprintf(
+			"redis://%s:%s@%s:%s/%s",
+			os.Getenv("REDIS_USER"),
+			os.Getenv("REDIS_SECRET"),
+			os.Getenv("REDIS_HOST"),
+			os.Getenv("REDIS_PORT"),
+			os.Getenv("REDIS_DB_NUMBER"),
+		),
+	)
 
 	if err != nil {
 		log.Fatal("Redis connection error: " + err.Error())
