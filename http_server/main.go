@@ -17,6 +17,9 @@ func health(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/hello/", health)
 
+	http.HandleFunc("/player/update", controllers.PlayerUpdate)
+	http.HandleFunc("/player/", controllers.PlayerQuery)
+
 	http.HandleFunc("/game/start", controllers.GameStart)
 	http.HandleFunc("/game/status", controllers.GameStatus)
 	http.HandleFunc("/game/complete", controllers.GameComplete)
