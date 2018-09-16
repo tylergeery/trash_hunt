@@ -17,6 +17,7 @@ func health(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/hello/", health)
 
+	http.HandleFunc("/player/create", controllers.PlayerCreate)
 	http.HandleFunc("/player/update", controllers.PlayerUpdate)
 	http.HandleFunc("/player/", controllers.PlayerQuery)
 
@@ -26,6 +27,8 @@ func main() {
 
 	http.HandleFunc("/results/leaderboard/", controllers.Results)
 	http.HandleFunc("/results/me", controllers.MyResults)
+
+	http.HandleFunc("/auth", controllers.Auth)
 
 	err := http.ListenAndServe(":9090", nil) // set listen port
 	if err != nil {
