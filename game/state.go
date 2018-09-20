@@ -46,7 +46,8 @@ func NewMaze() *Maze {
 	}
 }
 
-func (m *Maze) initialize() {
+// Initialize new maze for gameplay
+func (m *Maze) Initialize() {
 	// Initialize a new random seed
 	rand.Seed(time.Now().UnixNano())
 
