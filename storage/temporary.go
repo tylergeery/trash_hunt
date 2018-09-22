@@ -2,6 +2,7 @@ package storage
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -19,12 +20,9 @@ func ensureRedisConnection() {
 	tempOnce.Do(func() {
 		connection, err = redis.DialURL(
 			fmt.Sprintf(
-				"redis://%s:%s@%s:%s/%s",
-				os.Getenv("REDIS_USER"),
-				os.Getenv("REDIS_SECRET"),
+				"redis://%s:%s",
 				os.Getenv("REDIS_HOST"),
 				os.Getenv("REDIS_PORT"),
-				os.Getenv("REDIS_DB_NUMBER"),
 			),
 		)
 
@@ -73,4 +71,69 @@ func QueryHashKey(key, prop string) (string, error) {
 	ensureRedisConnection()
 
 	return redis.String(connection.Do("HGET", key, prop))
+}
+
+// SetKey in redis
+func SetKey(key string, value string) error {
+	output, err := redis.String(connection.Do("SET", key, value))
+
+	if err != nil {
+		return err
+	}
+
+	if output != "OK" {
+		return errors.New("Could not set value, unknown error")
+	}
+
+	return nil
+}
+
+// SetNumericKey in redis
+func SetNumericKey(key string, value int64) error {
+	output, err := redis.String(connection.Do("SET", key, value))
+
+	if err != nil {
+		return err
+	}
+
+	if output != "OK" {
+		return errors.New("Could not set numeric value, unknown error")
+	}
+
+	return nil
+}
+
+// SetHash - Set redis hash
+func SetHash(key string, value map[string]interface{}) error {
+	args := []interface{}{key}
+	for key, val := range value {
+		args = append(args, key, val)
+	}
+	output, err := redis.String(connection.Do("HMSET", args...))
+
+	if err != nil {
+		return err
+	}
+
+	if output != "OK" {
+		return errors.New("Could not set hash value, unknown error")
+	}
+
+	return nil
+}
+
+// SetHashKey - Set Redis Hash
+func SetHashKey(key, prop, value string) error {
+	output, err := redis.Int64(connection.Do("HSET", key, prop, value))
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(output)
+	if output != 0 {
+		return errors.New("Could not set hash value, unknown error")
+	}
+
+	return nil
 }
