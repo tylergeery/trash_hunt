@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -11,21 +10,27 @@ import (
 // SetVars for testing
 func SetVars() {
 	cmd := exec.Command("docker", "inspect", "--format", "'{{ .NetworkSettings.IPAddress }}'", "trash-hunt-redis")
-	output, err := cmd.CombinedOutput()
+	redis, err := cmd.CombinedOutput()
 
 	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + string(output))
+		log.Fatal(err)
+	}
+
+	cmd = exec.Command("docker", "inspect", "--format", "'{{ .NetworkSettings.IPAddress }}'", "trash-hunt-pg")
+	pg, err := cmd.CombinedOutput()
+
+	if err != nil {
 		log.Fatal(err)
 	}
 
 	// set persistent storage
-	os.Setenv("DB_USER", "test")
-	os.Setenv("DB_PASS", "test")
-	os.Setenv("DB_HOST", "localhost")
-	os.Setenv("DB_TABLE", "test")
-	os.Setenv("DB_SSL_MODE", "verify")
+	os.Setenv("DB_USER", "dev")
+	os.Setenv("DB_PASS", "dev_secret")
+	os.Setenv("DB_HOST", strings.Trim(string(pg), "\n'"))
+	os.Setenv("DB_TABLE", "dev_secret")
+	os.Setenv("DB_SSL_MODE", "disable")
 
 	// set temporary storage
-	os.Setenv("REDIS_HOST", strings.Trim(string(output), "\n'"))
+	os.Setenv("REDIS_HOST", strings.Trim(string(redis), "\n'"))
 	os.Setenv("REDIS_PORT", "6379")
 }

@@ -17,25 +17,33 @@ var db *sql.DB
 var persistentOnce sync.Once
 
 func ensureConnection() {
+	persistentOnce.Do(func() {
+		openConnection()
+	})
+}
+
+func openConnection() {
 	var err error
 
-	persistentOnce.Do(func() {
-		db, err = sql.Open(
-			"postgres",
-			fmt.Sprintf(
-				"postgres://%s:%s@%s/%s?sslmode=%s",
-				os.Getenv("DB_USER"),
-				os.Getenv("DB_PASS"),
-				os.Getenv("DB_HOST"),
-				os.Getenv("DB_TABLE"),
-				os.Getenv("DB_SSL_MODE"),
-			),
-		)
+	db, err = sql.Open(
+		"postgres",
+		fmt.Sprintf(
+			"postgres://%s:%s@%s/%s?sslmode=%s",
+			os.Getenv("DB_USER"),
+			os.Getenv("DB_PASS"),
+			os.Getenv("DB_HOST"),
+			os.Getenv("DB_TABLE"),
+			os.Getenv("DB_SSL_MODE"),
+		),
+	)
 
-		if err != nil {
-			log.Fatal("Postgres connection error" + err.Error())
-		}
-	})
+	if err != nil {
+		log.Fatalf("Postgres connection error: %s", err)
+	}
+}
+
+func closeConnection() {
+	db.Close()
 }
 
 // Insert a new DB record
@@ -45,8 +53,13 @@ func Insert(table string, insert map[string]interface{}, types map[string]string
 	ensureConnection()
 
 	values := getValues(insert, types)
-	query := fmt.Sprintf("INSERT INTO `%s` (%s, created_at, updated_at) VALUES (%s, NOW(), NOW()) RETURNING id", table, getColumns(insert), valuesStub(len(insert)))
-	err := db.QueryRow(query, values...).Scan(&insertID)
+	query := fmt.Sprintf("INSERT INTO %s (%s, created_at, updated_at) VALUES (%s, NOW(), NOW()) RETURNING id", table, getColumns(insert), valuesStub(len(insert)))
+	fmt.Println(query)
+	row := db.QueryRow(query, values...)
+
+	defer row.Close()
+
+	err := row.Scan(&insertID)
 
 	return insertID, err
 }
@@ -75,14 +88,14 @@ func FetchRows(query string, values []interface{}) (*sql.Rows, error) {
 	return db.Query(query, values)
 }
 
-func getColumns(m map[string]interface{}) []string {
+func getColumns(m map[string]interface{}) string {
 	cols := make([]string, 0, len(m))
 
 	for k := range m {
 		cols = append(cols, k)
 	}
 
-	return cols
+	return strings.Join(cols, ",")
 }
 
 func getValues(values map[string]interface{}, types map[string]string) []interface{} {

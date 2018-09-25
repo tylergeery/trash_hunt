@@ -130,7 +130,6 @@ func SetHashKey(key, prop, value string) error {
 		return err
 	}
 
-	fmt.Println(output)
 	if output != 0 {
 		return errors.New("Could not set hash value, unknown error")
 	}
