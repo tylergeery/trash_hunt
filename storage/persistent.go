@@ -54,38 +54,45 @@ func Insert(table string, insert map[string]interface{}, types map[string]string
 
 	values := getValues(insert, types)
 	query := fmt.Sprintf("INSERT INTO %s (%s, created_at, updated_at) VALUES (%s, NOW(), NOW()) RETURNING id", table, getColumns(insert), valuesStub(len(insert)))
-	fmt.Println(query)
 	row := db.QueryRow(query, values...)
-
-	defer row.Close()
-
 	err := row.Scan(&insertID)
 
 	return insertID, err
 }
 
 // Update an existing DB record
-func Update(table string, update map[string]interface{}, types map[string]string) {
+func Update(table string, update map[string]interface{}, types map[string]string) error {
 	ensureConnection()
 
 	values := getValues(update, types)
-	query := fmt.Sprintf("UPDATE `%s` SET (%s, updated_at) = (%s, NOW())", table, getColumns(update), valuesStub(len(update)))
-	_ = db.QueryRow(query, values...)
+	query := fmt.Sprintf("UPDATE %s SET (%s, updated_at) = (%s, NOW())", table, getColumns(update), valuesStub(len(update)))
+	_, err := db.Exec(query, values...)
+
+	return err
 }
 
 // Remove an existing DB record
-func Remove(table string, id int64) {
+func Remove(table string, id int64) error {
 	ensureConnection()
 
-	query := fmt.Sprintf("DELETE FROM `%s` WHERE id = $1", table)
-	_ = db.QueryRow(query, id)
+	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", table)
+	_, err := db.Exec(query, id)
+
+	return err
 }
 
 // FetchRows for an arbitrary db query
-func FetchRows(query string, values []interface{}) (*sql.Rows, error) {
+func FetchRows(query string, args ...interface{}) (*sql.Rows, error) {
 	ensureConnection()
 
-	return db.Query(query, values)
+	return db.Query(query, args...)
+}
+
+// FetchRow returns a single record
+func FetchRow(query string, args ...interface{}) *sql.Row {
+	ensureConnection()
+
+	return db.QueryRow(query, args...)
 }
 
 func getColumns(m map[string]interface{}) string {
