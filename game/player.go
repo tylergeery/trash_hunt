@@ -29,7 +29,7 @@ var types = map[string]string{
 	"updated_at":  "string",
 }
 
-// NewPlayer - Constructor
+// PlayerNew - Constructor
 func PlayerNew(id int64, email, pw, name, facebookID, createdAt, updatedAt string) *Player {
 	return &Player{
 		ID:         id,
@@ -42,7 +42,7 @@ func PlayerNew(id int64, email, pw, name, facebookID, createdAt, updatedAt strin
 	}
 }
 
-// Register a new player
+// PlayerRegister - register a new player
 func PlayerRegister(email, pw, name, facebookID string) (*Player, error) {
 	// Validate and hash password, or validate facebookID
 
@@ -54,7 +54,7 @@ func PlayerRegister(email, pw, name, facebookID string) (*Player, error) {
 	return p, err
 }
 
-// Update an existing player
+// PlayerUpdate - update an existing player
 func (p *Player) PlayerUpdate() error {
 	if p.ID == 0 {
 		return errors.New("Could not update non-existent player")

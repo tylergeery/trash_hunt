@@ -26,40 +26,49 @@ func NewMaze() *Maze {
 }
 
 func (m *Maze) revert() {
-
+	m.removeWalls(m.recent)
 }
 
 func (m *Maze) addWalls(pos int) {
+	m.recent = pos
+	m.setWalls(pos, true)
+}
+
+func (m *Maze) removeWalls(pos int) {
+	m.setWalls(pos, false)
+}
+
+func (m *Maze) setWalls(pos int, value bool) {
 	wall := (pos % 4)
 
 	switch wall {
 	case 0: // top wall
-		m.addWall(pos)
+		m.setWall(pos, value)
 		if (pos / gameBoardSize) != 0 {
-			m.addWall(pos - (gameBoardSize * 4) + 2)
+			m.setWall(pos-(gameBoardSize*4)+2, value)
 		}
 	case 1: // right wall
-		m.addWall(pos)
+		m.setWall(pos, value)
 		if (pos % gameBoardSize) < ((gameBoardSize - 1) * 4) {
-			m.addWall(pos + 6)
+			m.setWall(pos+6, value)
 		}
 	case 2: // bottom wall
-		m.addWall(pos)
+		m.setWall(pos, value)
 		if (pos / gameBoardSize) != (gameBoardSize - 1) {
-			m.addWall(pos + (gameBoardSize * 4) - 2)
+			m.setWall(pos+(gameBoardSize*4)-2, value)
 		}
 	case 3: // left wall
-		m.addWall(pos)
+		m.setWall(pos, value)
 		if (pos % gameBoardSize) > 4 {
-			m.addWall(pos - 6)
+			m.setWall(pos-6, value)
 		}
 	}
 }
 
-func (m *Maze) addWall(pos int) {
+func (m *Maze) setWall(pos int, value bool) {
 	rowTotal := 4 * gameBoardSize
 
-	m.Walls[pos/rowTotal][(pos%rowTotal)/4][pos%4] = true
+	m.Walls[pos/rowTotal][(pos%rowTotal)/4][pos%4] = value
 }
 
 // IsValid - ensure maze is valid

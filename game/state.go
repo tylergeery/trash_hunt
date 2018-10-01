@@ -15,7 +15,7 @@ type State struct {
 	Maze    *Maze   `json:"maze"`
 }
 
-// Initialize new maze for gameplay
+// InitializeGameState - setup new maze and player/trash pos for gameplay
 func InitializeGameState() *State {
 	var s State
 
