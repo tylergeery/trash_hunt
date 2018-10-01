@@ -4,7 +4,7 @@ CREATE TABLE player (
     password VARCHAR(120),
     name VARCHAR(60),
     facebook_id VARCHAR(50) DEFAULT NULL,
-    is_active SMALLINT DEFAULT 1,
+    status VARCHAR(50) DEFAULT 'Active',
     created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'PST'),
     updated_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'PST')
 );
