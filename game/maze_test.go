@@ -83,7 +83,3 @@ func TestAddWallsAndRevert(t *testing.T) {
 		}
 	}
 }
-
-func TestIsValid(t *testing.T) {
-
-}

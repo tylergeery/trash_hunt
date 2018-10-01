@@ -70,12 +70,3 @@ func (m *Maze) setWall(pos int, value bool) {
 
 	m.Walls[pos/rowTotal][(pos%rowTotal)/4][pos%4] = value
 }
-
-// IsValid - ensure maze is valid
-func (m *Maze) IsValid() bool {
-	// Check that player1 can reach trash
-
-	// Check that player2 can reach trash
-
-	return true
-}

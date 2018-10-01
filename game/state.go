@@ -32,7 +32,7 @@ func InitializeGameState() *State {
 		// try adding a new wall
 		s.Maze.addWalls(rand.Intn(gameBoardSize * gameBoardSize))
 
-		if !s.Maze.IsValid() {
+		if !s.IsValid() {
 			i++
 
 			s.Maze.revert()
@@ -40,4 +40,13 @@ func InitializeGameState() *State {
 	}
 
 	return &s
+}
+
+// IsValid - ensure maze is valid
+func (s *State) IsValid() bool {
+	// Check that player1 can reach trash
+
+	// Check that player2 can reach trash
+
+	return false
 }
