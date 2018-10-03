@@ -83,3 +83,7 @@ func TestAddWallsAndRevert(t *testing.T) {
 		}
 	}
 }
+
+func TestCanMoveBetween(t *testing.T) {
+
+}

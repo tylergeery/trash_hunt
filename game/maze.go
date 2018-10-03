@@ -44,7 +44,7 @@ func (m *Maze) setWalls(pos int, value bool) {
 	switch wall {
 	case 0: // top wall
 		m.setWall(pos, value)
-		if (pos / gameBoardSize) != 0 {
+		if (pos / (gameBoardSize * 4)) != 0 {
 			m.setWall(pos-(gameBoardSize*4)+2, value)
 		}
 	case 1: // right wall
@@ -54,7 +54,7 @@ func (m *Maze) setWalls(pos int, value bool) {
 		}
 	case 2: // bottom wall
 		m.setWall(pos, value)
-		if (pos / gameBoardSize) != (gameBoardSize - 1) {
+		if (pos / (gameBoardSize * 4)) != (gameBoardSize - 1) {
 			m.setWall(pos+(gameBoardSize*4)-2, value)
 		}
 	case 3: // left wall
@@ -69,4 +69,35 @@ func (m *Maze) setWall(pos int, value bool) {
 	rowTotal := 4 * gameBoardSize
 
 	m.Walls[pos/rowTotal][(pos%rowTotal)/4][pos%4] = value
+}
+
+func (m *Maze) hasWall(pos int) bool {
+	rowTotal := 4 * gameBoardSize
+
+	return m.Walls[pos/rowTotal][(pos%rowTotal)/4][pos%4]
+}
+
+// CanMoveBetween two positons (are there walls blocking?)
+func (m *Maze) CanMoveBetween(pos1, pos2 Pos) bool {
+	if pos1.X != pos2.X && pos1.Y != pos2.Y {
+		return false
+	}
+
+	if (pos1.X - pos2.X) == 1 {
+		return !m.hasWall(gameBoardSize*4*pos1.Y + 4*pos1.X + 3)
+	}
+
+	if (pos1.X - pos2.X) == -1 {
+		return !m.hasWall(gameBoardSize*4*pos1.Y + 4*pos1.X + 1)
+	}
+
+	if (pos1.Y - pos2.Y) == 1 {
+		return !m.hasWall(gameBoardSize*4*pos1.Y + 4*pos1.X)
+	}
+
+	if (pos1.Y - pos2.Y) == -1 {
+		return !m.hasWall(gameBoardSize*4*pos1.Y + 4*pos1.X + 2)
+	}
+
+	return false
 }
