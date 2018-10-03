@@ -15,7 +15,12 @@ func NewMaze() *Maze {
 		walls[i] = make([][]bool, gameBoardSize)
 
 		for j := 0; j < gameBoardSize; j++ {
-			walls[i][j] = []bool{false, false, false, false}
+			walls[i][j] = []bool{
+				i == 0,
+				j == (gameBoardSize - 1),
+				i == (gameBoardSize - 1),
+				j == 0,
+			}
 		}
 	}
 

@@ -36,6 +36,22 @@ func TestGetAvailableMoves(t *testing.T) {
 			p:   Pos{0, 0},
 			exp: []Pos{Pos{1, 0}, Pos{0, 1}},
 		},
+		TestCase{
+			p:   Pos{1, 0},
+			exp: []Pos{Pos{2, 0}, Pos{1, 1}, Pos{0, 0}},
+		},
+		TestCase{
+			p:   Pos{9, 1},
+			exp: []Pos{Pos{9, 0}, Pos{9, 2}, Pos{8, 1}},
+		},
+		TestCase{
+			p:   Pos{0, 9},
+			exp: []Pos{Pos{0, 8}, Pos{1, 9}},
+		},
+		TestCase{
+			p:   Pos{5, 5},
+			exp: []Pos{Pos{5, 4}, Pos{6, 5}, Pos{5, 6}, Pos{4, 5}},
+		},
 	}
 
 	for _, test := range testCases {
