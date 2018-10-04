@@ -36,7 +36,7 @@ func InitializeGameState(player1, player2 *Player) *State {
 	return &s
 }
 
-func (s *State) initializeWithDifficulty(difficulty int) {
+func (s *State) StartWithDifficulty(difficulty int) {
 	// keep adding walls as long as both user can solve
 	for i := 0; i < difficulty; {
 		// try adding a new wall
@@ -77,14 +77,25 @@ func (s *State) PlayerCanFinish(player *Player, outcomes map[string]bool) bool {
 		player.Pos.Y = originalPosY
 	}()
 
+	fmt.Println(s.getAvailableMoves(player))
 	for _, pos := range s.getAvailableMoves(player) {
 		player.Pos.X = pos.X
 		player.Pos.Y = pos.Y
+		key := fmt.Sprintf("%d-%d", pos.X, pos.Y)
+		fmt.Println(outcomes)
 
-		success := s.PlayerCanFinish(player, outcomes)
+		if success, ok := outcomes[key]; ok {
+			fmt.Printf("Found outcomes key: %s %t", key, success)
+			return success
+		}
+
+		success := false
+		if len(outcomes) < 2 {
+			// success = s.PlayerCanFinish(player, outcomes)
+		}
 
 		// memoize results
-		outcomes[fmt.Sprintf("%d-%d", pos.X, pos.Y)] = success
+		outcomes[key] = success
 
 		if success {
 			return true

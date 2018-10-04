@@ -22,6 +22,40 @@ func TestInitializeGameState(t *testing.T) {
 	}
 }
 
+func TestInitializeWithDifficulty(t *testing.T) {
+	// difficulties := []int{1, 5, 10}
+
+	// for _, d := range difficulties {
+	// 	p1 := PlayerNew(1, "", "", "", "", "", "")
+	// 	p2 := PlayerNew(1, "", "", "", "", "", "")
+	// 	state := InitializeGameState(p1, p2)
+	// 	state.StartWithDifficulty(d)
+	//
+	// 	if !state.IsValid() {
+	// 		t.Fatalf("Received invalid game state")
+	// 	}
+	// }
+}
+
+func TestPlayerCanFinish(t *testing.T) {
+	p1 := PlayerNew(1, "", "", "", "", "", "")
+	p2 := PlayerNew(1, "", "", "", "", "", "")
+	state := InitializeGameState(p1, p2)
+	state.Player1.Pos.X = state.Maze.TrashPos.X
+	state.Player1.Pos.Y = state.Maze.TrashPos.Y
+	state.Player2.Pos.X = state.Maze.TrashPos.X
+	state.Player2.Pos.Y = state.Maze.TrashPos.Y - 1
+	outcomes := map[string]bool{}
+
+	if !state.PlayerCanFinish(p1, outcomes) {
+		t.Fatalf("Player at pos (%d, %d) could not finish", p1.Pos.X, p1.Pos.Y)
+	}
+
+	if !state.PlayerCanFinish(p2, outcomes) {
+		t.Fatalf("Player at pos (%d, %d) could not finish", p2.Pos.X, p2.Pos.Y)
+	}
+}
+
 func TestGetAvailableMoves(t *testing.T) {
 	type TestCase struct {
 		p   Pos
