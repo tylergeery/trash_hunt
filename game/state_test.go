@@ -46,12 +46,13 @@ func TestPlayerCanFinish(t *testing.T) {
 	state.Player2.Pos.X = state.Maze.TrashPos.X
 	state.Player2.Pos.Y = state.Maze.TrashPos.Y - 1
 	outcomes := map[string]bool{}
+	visited := []Pos{}
 
-	if !state.PlayerCanFinish(p1, outcomes) {
+	if !state.PlayerCanFinish(p1, outcomes, visited) {
 		t.Fatalf("Player at pos (%d, %d) could not finish", p1.Pos.X, p1.Pos.Y)
 	}
 
-	if !state.PlayerCanFinish(p2, outcomes) {
+	if !state.PlayerCanFinish(p2, outcomes, visited) {
 		t.Fatalf("Player at pos (%d, %d) could not finish", p2.Pos.X, p2.Pos.Y)
 	}
 }
@@ -90,7 +91,8 @@ func TestGetAvailableMoves(t *testing.T) {
 
 	for _, test := range testCases {
 		p1.Pos = test.p
-		moves := state.getAvailableMoves(p1)
+		visited := []Pos{}
+		moves := state.getAvailableMoves(p1, visited)
 
 		if len(moves) != len(test.exp) {
 			t.Fatalf("Moves had len: %d, but expected length: %d", len(moves), len(test.exp))

@@ -58,13 +58,14 @@ func (s *State) StartWithDifficulty(difficulty int) {
 // IsValid - ensure maze is valid
 func (s *State) IsValid() bool {
 	outcomes := map[string]bool{}
+	visited := []Pos{}
 
 	// fmt.Printf("Checking if player can finish: (%d, %d)\n", s.Player1.Pos.X, s.Player2.Pos.Y)
-	return s.PlayerCanFinish(s.Player1, outcomes) && s.PlayerCanFinish(s.Player2, outcomes)
+	return s.PlayerCanFinish(s.Player1, outcomes, visited) && s.PlayerCanFinish(s.Player2, outcomes, visited)
 }
 
 // PlayerCanFinish - can the given player finish?
-func (s *State) PlayerCanFinish(player *Player, outcomes map[string]bool) bool {
+func (s *State) PlayerCanFinish(player *Player, outcomes map[string]bool, visited []Pos) bool {
 	// fmt.Printf("Player can finish (%d, %d), trash (%d, %d)\n", player.Pos.X, player.Pos.Y, s.Maze.TrashPos.X, s.Maze.TrashPos.Y)
 	if player.Pos.X == s.Maze.TrashPos.X && player.Pos.Y == s.Maze.TrashPos.Y {
 		return true
@@ -77,22 +78,17 @@ func (s *State) PlayerCanFinish(player *Player, outcomes map[string]bool) bool {
 		player.Pos.Y = originalPosY
 	}()
 
-	fmt.Println(s.getAvailableMoves(player))
-	for _, pos := range s.getAvailableMoves(player) {
+	for _, pos := range s.getAvailableMoves(player, visited) {
 		player.Pos.X = pos.X
 		player.Pos.Y = pos.Y
 		key := fmt.Sprintf("%d-%d", pos.X, pos.Y)
-		fmt.Println(outcomes)
+		visited = append(visited, Pos{pos.X, pos.Y})
 
 		if success, ok := outcomes[key]; ok {
-			fmt.Printf("Found outcomes key: %s %t", key, success)
 			return success
 		}
 
-		success := false
-		if len(outcomes) < 2 {
-			// success = s.PlayerCanFinish(player, outcomes)
-		}
+		success := s.PlayerCanFinish(player, outcomes, visited)
 
 		// memoize results
 		outcomes[key] = success
@@ -105,37 +101,47 @@ func (s *State) PlayerCanFinish(player *Player, outcomes map[string]bool) bool {
 	return false
 }
 
-func (s *State) getAvailableMoves(player *Player) []Pos {
+func (s *State) getAvailableMoves(player *Player, visited []Pos) []Pos {
 	positions := []Pos{}
 	next := Pos{player.Pos.X, player.Pos.Y}
 
 	// can player go up?
 	next.Y = player.Pos.Y - 1
-	if next.Y >= 0 && s.Maze.CanMoveBetween(player.Pos, next) {
+	if next.Y >= 0 && s.Maze.CanMoveBetween(player.Pos, next) && !hasVisited(next, visited) {
 		positions = append(positions, Pos{next.X, next.Y})
 	}
 	next.Y = player.Pos.Y
 
 	// can player go right?
 	next.X = player.Pos.X + 1
-	if next.X < gameBoardSize && s.Maze.CanMoveBetween(player.Pos, next) {
+	if next.X < gameBoardSize && s.Maze.CanMoveBetween(player.Pos, next) && !hasVisited(next, visited) {
 		positions = append(positions, Pos{next.X, next.Y})
 	}
 	next.X = player.Pos.X
 
 	// can player go down?
 	next.Y = player.Pos.Y + 1
-	if next.Y < gameBoardSize && s.Maze.CanMoveBetween(player.Pos, next) {
+	if next.Y < gameBoardSize && s.Maze.CanMoveBetween(player.Pos, next) && !hasVisited(next, visited) {
 		positions = append(positions, Pos{next.X, next.Y})
 	}
 	next.Y = player.Pos.Y
 
 	// can player go left?
 	next.X = player.Pos.X - 1
-	if player.Pos.X >= 0 && s.Maze.CanMoveBetween(player.Pos, next) {
+	if player.Pos.X >= 0 && s.Maze.CanMoveBetween(player.Pos, next) && !hasVisited(next, visited) {
 		positions = append(positions, Pos{next.X, next.Y})
 	}
 	next.X = player.Pos.X
 
 	return positions
+}
+
+func hasVisited(pos Pos, visited []Pos) bool {
+	for _, v := range visited {
+		if v.X == pos.X && v.Y == pos.Y {
+			return true
+		}
+	}
+
+	return false
 }
