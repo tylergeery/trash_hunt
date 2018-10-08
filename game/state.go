@@ -36,12 +36,12 @@ func InitializeGameState(player1, player2 *Player) *State {
 	return &s
 }
 
+// StartWithDifficulty - Creates new game state with specified difficulty
 func (s *State) StartWithDifficulty(difficulty int) {
 	// keep adding walls as long as both user can solve
 	for i := 0; i < difficulty; {
 		// try adding a new wall
 		newWall := rand.Intn(gameBoardSize*(gameBoardSize-1)*4 + gameBoardSize*4)
-		// fmt.Printf("Added wall: %d\n", newWall)
 		s.Maze.addWalls(newWall)
 
 		// Check maze is still solvable for both players
@@ -50,7 +50,6 @@ func (s *State) StartWithDifficulty(difficulty int) {
 
 			// Undo latest wall and try again
 			s.Maze.revert()
-			fmt.Printf("Strike %d!\n", i)
 		}
 	}
 }

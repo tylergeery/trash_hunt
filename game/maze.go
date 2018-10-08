@@ -54,7 +54,7 @@ func (m *Maze) setWalls(pos int, value bool) {
 		}
 	case 1: // right wall
 		m.setWall(pos, value)
-		if (pos % gameBoardSize) < ((gameBoardSize - 1) * 4) {
+		if (pos % (gameBoardSize * 4)) < ((gameBoardSize - 1) * 4) {
 			m.setWall(pos+6, value)
 		}
 	case 2: // bottom wall
@@ -64,7 +64,7 @@ func (m *Maze) setWalls(pos int, value bool) {
 		}
 	case 3: // left wall
 		m.setWall(pos, value)
-		if (pos % gameBoardSize) > 4 {
+		if (pos % (gameBoardSize * 4)) > 4 {
 			m.setWall(pos-6, value)
 		}
 	}

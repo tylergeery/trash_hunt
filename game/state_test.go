@@ -23,18 +23,18 @@ func TestInitializeGameState(t *testing.T) {
 }
 
 func TestInitializeWithDifficulty(t *testing.T) {
-	// difficulties := []int{1, 5, 10}
+	difficulties := []int{1, 5, 10}
 
-	// for _, d := range difficulties {
-	// 	p1 := PlayerNew(1, "", "", "", "", "", "")
-	// 	p2 := PlayerNew(1, "", "", "", "", "", "")
-	// 	state := InitializeGameState(p1, p2)
-	// 	state.StartWithDifficulty(d)
-	//
-	// 	if !state.IsValid() {
-	// 		t.Fatalf("Received invalid game state")
-	// 	}
-	// }
+	for _, d := range difficulties {
+		p1 := PlayerNew(1, "", "", "", "", "", "")
+		p2 := PlayerNew(1, "", "", "", "", "", "")
+		state := InitializeGameState(p1, p2)
+		state.StartWithDifficulty(d)
+
+		if !state.IsValid() {
+			t.Fatalf("Received invalid game state")
+		}
+	}
 }
 
 func TestPlayerCanFinish(t *testing.T) {
