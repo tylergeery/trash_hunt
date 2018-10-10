@@ -1,6 +1,6 @@
 CREATE TABLE player (
     id SERIAL PRIMARY KEY,
-    email VARCHAR(50),
+    email VARCHAR(50) UNIQUE,
     password VARCHAR(120),
     name VARCHAR(60),
     facebook_id VARCHAR(50) DEFAULT NULL,

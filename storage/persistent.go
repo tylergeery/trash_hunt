@@ -61,11 +61,11 @@ func Insert(table string, insert map[string]interface{}, types map[string]string
 }
 
 // Update an existing DB record
-func Update(table string, update map[string]interface{}, types map[string]string) error {
+func Update(table string, update map[string]interface{}, types map[string]string, ID int64) error {
 	ensureConnection()
 
 	values := getValues(update, types)
-	query := fmt.Sprintf("UPDATE %s SET (%s, updated_at) = (%s, NOW())", table, getColumns(update), valuesStub(len(update)))
+	query := fmt.Sprintf("UPDATE %s SET (%s, updated_at) = (%s, NOW()) WHERE id = %d", table, getColumns(update), valuesStub(len(update)), ID)
 	_, err := db.Exec(query, values...)
 
 	return err

@@ -4,12 +4,8 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/tylergeery/trash_hunt/test"
+	_ "github.com/tylergeery/trash_hunt/test"
 )
-
-func init() {
-	test.SetVars()
-}
 
 func TestInsertUpdateAndRemove(t *testing.T) {
 	var fetchID, rowFetchID int64
@@ -55,7 +51,7 @@ func TestInsertUpdateAndRemove(t *testing.T) {
 		"keyword": "Yup:::!",
 	}
 
-	err = Update(table, update, types)
+	err = Update(table, update, types, id)
 
 	if err != nil {
 		t.Fatalf("Unexpected update error: %s", err)

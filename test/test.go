@@ -8,7 +8,7 @@ import (
 )
 
 // SetVars for testing
-func SetVars() {
+func init() {
 	cmd := exec.Command("docker", "inspect", "--format", "'{{ .NetworkSettings.IPAddress }}'", "trash-hunt-redis")
 	redis, err := cmd.CombinedOutput()
 

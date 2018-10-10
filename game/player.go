@@ -2,11 +2,14 @@ package game
 
 import (
 	"errors"
+	"fmt"
 
+	"github.com/goware/emailx"
 	"github.com/tylergeery/trash_hunt/storage"
 )
 
 const dbTable = "player"
+const minPasswordLength = 8
 
 // Player is a given player in the game
 type Player struct {
@@ -45,6 +48,9 @@ func PlayerNew(id int64, email, pw, name, facebookID, createdAt, updatedAt strin
 // PlayerRegister - register a new player
 func PlayerRegister(email, pw, name, facebookID string) (*Player, error) {
 	// Validate and hash password, or validate facebookID
+	if len(pw) < minPasswordLength {
+		return nil, errors.New(fmt.Sprintf("Password must be at least %d characters", minPasswordLength))
+	}
 
 	// Validate email is unique
 
@@ -74,10 +80,10 @@ func (p *Player) save() error {
 	}
 
 	if p.ID == 0 {
-		id, err = storage.Insert(dbTable, p.toSaveMap(), types)
+		id, err = storage.Insert(dbTable, p.toCreateMap(), types)
 		p.ID = id
 	} else {
-		err = storage.Update(dbTable, p.toSaveMap(), types)
+		err = storage.Update(dbTable, p.toUpdateMap(), types, p.ID)
 	}
 
 	return err
@@ -85,16 +91,40 @@ func (p *Player) save() error {
 
 func (p *Player) toSaveMap() map[string]interface{} {
 	return map[string]interface{}{
-		"id":    p.ID,
-		"name":  p.Name,
-		"email": p.Email,
+		"name":        p.Name,
+		"email":       p.Email,
+		"facebook_id": p.FacebookID,
 	}
+}
+
+func (p *Player) toCreateMap() map[string]interface{} {
+	m := p.toSaveMap()
+	m["password"] = p.pw
+
+	return m
+}
+
+func (p *Player) toUpdateMap() map[string]interface{} {
+	m := p.toSaveMap()
+
+	return m
 }
 
 func (p *Player) validate() error {
 	var err error
 
-	// check valid email
+	if err = emailx.Validate(p.Email); err != nil {
+		return errors.New("Invalid email format")
+	}
+
+	// check valid passowrd
+	if p.pw == "" {
+		return errors.New("Invalid password")
+	}
+
+	if p.Name == "" {
+		return errors.New("Invalid name")
+	}
 
 	// return error
 	return err

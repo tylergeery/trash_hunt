@@ -5,12 +5,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/tylergeery/trash_hunt/test"
+	_ "github.com/tylergeery/trash_hunt/test"
 )
-
-func init() {
-	test.SetVars()
-}
 
 func TestQueryKeyNonexistent(t *testing.T) {
 	notExistsKey := "notexistfakekey"
