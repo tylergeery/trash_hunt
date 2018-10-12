@@ -49,7 +49,7 @@ func PlayerNew(id int64, email, pw, name, facebookID, createdAt, updatedAt strin
 func PlayerRegister(email, pw, name, facebookID string) (*Player, error) {
 	// Validate and hash password, or validate facebookID
 	if len(pw) < minPasswordLength {
-		return nil, errors.New(fmt.Sprintf("Password must be at least %d characters", minPasswordLength))
+		return nil, fmt.Errorf("Password must be at least %d characters", minPasswordLength)
 	}
 
 	// Validate email is unique
@@ -60,8 +60,8 @@ func PlayerRegister(email, pw, name, facebookID string) (*Player, error) {
 	return p, err
 }
 
-// PlayerUpdate - update an existing player
-func (p *Player) PlayerUpdate() error {
+// Update - update an existing player
+func (p *Player) Update() error {
 	if p.ID == 0 {
 		return errors.New("Could not update non-existent player")
 	}
@@ -115,11 +115,6 @@ func (p *Player) validate() error {
 
 	if err = emailx.Validate(p.Email); err != nil {
 		return errors.New("Invalid email format")
-	}
-
-	// check valid passowrd
-	if p.pw == "" {
-		return errors.New("Invalid password")
 	}
 
 	if p.Name == "" {

@@ -3,7 +3,9 @@ package game
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"testing"
+	"time"
 
 	_ "github.com/tylergeery/trash_hunt/test"
 )
@@ -46,10 +48,11 @@ func TestPlayerRegisterSuccess(t *testing.T) {
 		args   [4]string
 		player *Player
 	}
+	testEmail := getTestEmail()
 	testCases := []TestCase{
 		TestCase{
-			args:   [4]string{"tyer+twentyfive@test.com", "asdffdssadf", "jk", ""},
-			player: PlayerNew(0, "tyer+twentyfive@test.com", "asdffdssadf", "jk", "", "", ""),
+			args:   [4]string{testEmail, "asdffdssadf", "jk", ""},
+			player: PlayerNew(0, testEmail, "asdffdssadf", "jk", "", "", ""),
 		},
 	}
 
@@ -73,4 +76,32 @@ func TestPlayerRegisterSuccess(t *testing.T) {
 			t.Fatalf("Expected player FacebookID: %s, received: %s", p.FacebookID, test.player.FacebookID)
 		}
 	}
+}
+
+func TestPlayerUpdateError(t *testing.T) {
+	p := PlayerNew(0, "test@test.com", "", "", "", "", "")
+
+	p.Name = "Tester"
+	err := p.Update()
+
+	if err == nil || fmt.Sprintf("%s", err) != "Could not update non-existent player" {
+		t.Fatalf("Unexpected update err; %s", err)
+	}
+}
+
+func TestPlayerUpdate(t *testing.T) {
+	p, _ := PlayerRegister(getTestEmail(), "saklfsdlkfsa", "asdflksas TLkdlsff", "")
+
+	p.Name = "Tester"
+	err := p.Update()
+
+	if err != nil {
+		t.Fatalf("Unexpected register err; %s", err)
+	}
+}
+
+func getTestEmail() string {
+	rand.Seed(time.Now().UnixNano())
+
+	return "test+" + string(rand.Intn(12198343)) + "@tradesy.com"
 }
