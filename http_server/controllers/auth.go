@@ -10,6 +10,13 @@ import (
 	"github.com/tylergeery/trash_hunt/auth"
 )
 
+type key string
+
+const (
+	// PlayerIDKey for storing player_id in request context
+	PlayerIDKey key = "player_id"
+)
+
 // Auth - Create a new auth token from user key
 func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +31,7 @@ func Auth(next http.Handler) http.Handler {
 		playerID, err := auth.GetPlayerIDFromAccessToken(token)
 
 		if err == nil {
-			ctx := context.WithValue(r.Context(), "player_id", playerID)
+			ctx := context.WithValue(r.Context(), PlayerIDKey, playerID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		} else {
 			// TODO: reject request?
