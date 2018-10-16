@@ -1,13 +1,11 @@
 package controllers
 
 import (
-	"context"
-	"log"
+	"encoding/json"
 	"net/http"
-	"strings"
-	"time"
 
 	"github.com/tylergeery/trash_hunt/auth"
+	"github.com/tylergeery/trash_hunt/game"
 )
 
 type key string
@@ -17,25 +15,26 @@ const (
 	PlayerIDKey key = "player_id"
 )
 
-// Auth - Create a new auth token from user key
-func Auth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var err error
+// CreateAuthToken generates a new auth token for use
+func CreateAuthToken(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
 
-		defer func(begin time.Time) {
-			log.Printf("Authorized %t\n", err == nil)
-		}(time.Now())
+	// Get player key
+	key := r.Form.Get("key")
 
-		bearer := r.Header.Get("Authorization")
-		token := strings.TrimPrefix(bearer, "Bearer ")
-		playerID, err := auth.GetPlayerIDFromAccessToken(token)
+	// Look up player
+	player := game.PlayerGetByToken(key[0])
 
+	// Create temp auth token
+	token, err := auth.CreateToken(player)
+
+	// Send back to client
+	if err == nil {
+		response, err := json.Marshal()
 		if err == nil {
-			ctx := context.WithValue(r.Context(), PlayerIDKey, playerID)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		} else {
-			// TODO: reject request?
-			next.ServeHTTP(w, r)
+			w.Write(response)
 		}
-	})
+	}
+
+	// Set Error Response
 }

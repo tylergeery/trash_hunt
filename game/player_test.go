@@ -3,7 +3,7 @@ package game
 import (
 	"errors"
 	"fmt"
-	"math/rand"
+	"strconv"
 	"testing"
 	"time"
 
@@ -18,11 +18,11 @@ func TestPlayerRegisterFailures(t *testing.T) {
 	testCases := []TestCase{
 		TestCase{
 			args: [4]string{"", "asdffdssadf", "", ""},
-			err:  errors.New("Invalid email format"),
+			err:  errors.New("Invalid email format: "),
 		},
 		TestCase{
 			args: [4]string{"test", "asdffdssadf", "", ""},
-			err:  errors.New("Invalid email format"),
+			err:  errors.New("Invalid email format: test"),
 		},
 		TestCase{
 			args: [4]string{"test@yahoo.com", "1234", "", ""},
@@ -30,7 +30,7 @@ func TestPlayerRegisterFailures(t *testing.T) {
 		},
 		TestCase{
 			args: [4]string{"tyger@geerydev.com", "test1234", "", ""},
-			err:  errors.New("Invalid name"),
+			err:  errors.New("Invalid name: "),
 		},
 	}
 
@@ -52,7 +52,7 @@ func TestPlayerRegisterSuccess(t *testing.T) {
 	testCases := []TestCase{
 		TestCase{
 			args:   [4]string{testEmail, "asdffdssadf", "jk", ""},
-			player: PlayerNew(0, testEmail, "asdffdssadf", "jk", "", "", ""),
+			player: PlayerNew(0, testEmail, "asdffdssadf", "jk", "", "", "", ""),
 		},
 	}
 
@@ -79,7 +79,7 @@ func TestPlayerRegisterSuccess(t *testing.T) {
 }
 
 func TestPlayerUpdateError(t *testing.T) {
-	p := PlayerNew(0, "test@test.com", "", "", "", "", "")
+	p := PlayerNew(0, "test@test.com", "", "", "", "", "", "")
 
 	p.Name = "Tester"
 	err := p.Update()
@@ -101,7 +101,7 @@ func TestPlayerUpdate(t *testing.T) {
 }
 
 func getTestEmail() string {
-	rand.Seed(time.Now().UnixNano())
+	c := strconv.Itoa(int(time.Now().UnixNano()))
 
-	return "test+" + string(rand.Intn(12198343)) + "@tradesy.com"
+	return "test+" + c + "@tradesy.com"
 }

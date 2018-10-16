@@ -5,8 +5,8 @@ import (
 )
 
 func TestInitializeGameState(t *testing.T) {
-	p1 := PlayerNew(1, "", "", "", "", "", "")
-	p2 := PlayerNew(1, "", "", "", "", "", "")
+	p1 := PlayerNew(1, "", "", "", "", "", "", "")
+	p2 := PlayerNew(1, "", "", "", "", "", "", "")
 	state := InitializeGameState(p1, p2)
 
 	if state.Maze.TrashPos.X == 0 && state.Maze.TrashPos.Y == 0 {
@@ -26,8 +26,8 @@ func TestInitializeWithDifficulty(t *testing.T) {
 	difficulties := []int{1, 5, 10}
 
 	for _, d := range difficulties {
-		p1 := PlayerNew(1, "", "", "", "", "", "")
-		p2 := PlayerNew(1, "", "", "", "", "", "")
+		p1 := PlayerNew(1, "", "", "", "", "", "", "")
+		p2 := PlayerNew(1, "", "", "", "", "", "", "")
 		state := InitializeGameState(p1, p2)
 		state.StartWithDifficulty(d)
 
@@ -38,8 +38,8 @@ func TestInitializeWithDifficulty(t *testing.T) {
 }
 
 func TestPlayerCanFinish(t *testing.T) {
-	p1 := PlayerNew(1, "", "", "", "", "", "")
-	p2 := PlayerNew(1, "", "", "", "", "", "")
+	p1 := PlayerNew(1, "", "", "", "", "", "", "")
+	p2 := PlayerNew(1, "", "", "", "", "", "", "")
 	state := InitializeGameState(p1, p2)
 	state.Player1.Pos.X = state.Maze.TrashPos.X
 	state.Player1.Pos.Y = state.Maze.TrashPos.Y
@@ -63,8 +63,8 @@ func TestGetAvailableMoves(t *testing.T) {
 		exp []Pos
 	}
 
-	p1 := PlayerNew(1, "", "", "", "", "", "")
-	p2 := PlayerNew(1, "", "", "", "", "", "")
+	p1 := PlayerNew(1, "", "", "", "", "", "", "")
+	p2 := PlayerNew(1, "", "", "", "", "", "", "")
 	state := InitializeGameState(p1, p2)
 	testCases := []TestCase{
 		TestCase{
