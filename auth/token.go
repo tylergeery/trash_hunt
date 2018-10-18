@@ -16,7 +16,7 @@ func init() {
 }
 
 // CreateToken creates auth token for player
-func CreateToken(player game.Player) (string, error) {
+func CreateToken(player *game.Player) (string, error) {
 	claims := jwt.MapClaims{
 		"player_id": player.ID,
 		"nbf":       time.Now().Unix(),
@@ -67,7 +67,7 @@ func GetPlayerIDFromAccessToken(token string) (int64, error) {
 	}
 
 	if val, ok := claims["player_id"]; ok {
-		return val.(int64), nil
+		return int64(val.(float64)), nil
 	}
 
 	return 0, fmt.Errorf("Player ID not found in token")
