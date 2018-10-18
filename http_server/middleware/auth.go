@@ -10,6 +10,13 @@ import (
 	"github.com/tylergeery/trash_hunt/auth"
 )
 
+type key string
+
+const (
+	// PlayerIDKey for storing player_id in request context
+	PlayerIDKey key = "player_id"
+)
+
 func validateToken(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error

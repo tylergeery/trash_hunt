@@ -10,11 +10,6 @@ import (
 
 type key string
 
-const (
-	// PlayerIDKey for storing player_id in request context
-	PlayerIDKey key = "player_id"
-)
-
 // CreateAuthToken generates a new auth token for use
 func CreateAuthToken(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
@@ -23,14 +18,14 @@ func CreateAuthToken(w http.ResponseWriter, r *http.Request) {
 	key := r.Form.Get("key")
 
 	// Look up player
-	player := game.PlayerGetByToken(key[0])
+	player := game.PlayerGetByToken(string(key[0]))
 
 	// Create temp auth token
 	token, err := auth.CreateToken(player)
 
 	// Send back to client
 	if err == nil {
-		response, err := json.Marshal()
+		response, err := json.Marshal(map[string]string{"token": token})
 		if err == nil {
 			w.Write(response)
 		}
