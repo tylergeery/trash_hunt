@@ -44,8 +44,10 @@ func TestInvalidClaims(t *testing.T) {
 		t.Fatalf("Expected error retrieving playerID from invalid token")
 	}
 
+	dur, _ := time.ParseDuration("2m")
 	claims := jwt.MapClaims{
 		"nbf": time.Now().Unix(),
+		"exp": time.Now().Add(dur).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

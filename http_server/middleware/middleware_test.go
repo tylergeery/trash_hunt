@@ -44,4 +44,8 @@ func TestLogRequestAndValidate(t *testing.T) {
 	if foundPlayerID != player.ID {
 		t.Fatalf("Could not find playerID in auth token: %d", foundPlayerID)
 	}
+
+	// TODO: create logger in http.Handler
+	// TODO: test auth rejection
+	// TODO: test rate limiting middleware
 }

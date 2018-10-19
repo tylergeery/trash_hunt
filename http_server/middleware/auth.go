@@ -2,10 +2,8 @@ package middleware
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/tylergeery/trash_hunt/auth"
 )
@@ -20,10 +18,6 @@ const (
 func validateToken(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
-
-		defer func(begin time.Time) {
-			log.Printf("Authorized %t\n", err == nil)
-		}(time.Now())
 
 		bearer := r.Header.Get("Authorization")
 		token := strings.TrimPrefix(bearer, "Bearer ")

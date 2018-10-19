@@ -17,9 +17,11 @@ func init() {
 
 // CreateToken creates auth token for player
 func CreateToken(player *game.Player) (string, error) {
+	dur, _ := time.ParseDuration("10m")
 	claims := jwt.MapClaims{
 		"player_id": player.ID,
 		"nbf":       time.Now().Unix(),
+		"exp":       time.Now().Add(dur).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -53,6 +55,11 @@ func ExtractToken(tokenString string) (jwt.MapClaims, error) {
 
 	if !ok {
 		return nil, fmt.Errorf("Could not extract claims from token")
+	}
+
+	exp := int64(claims["exp"].(float64))
+	if exp < time.Now().Unix() {
+		return nil, fmt.Errorf("Token expired %d seconds ago", time.Now().Unix()-exp)
 	}
 
 	return claims, nil
