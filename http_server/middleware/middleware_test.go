@@ -34,7 +34,6 @@ func TestLogRequestAndValidate(t *testing.T) {
 	request.Header.Add("Authorization", "Bearer "+token)
 
 	wrappedHandler := LogRequestAndValidate(handler)
-
 	wrappedHandler.ServeHTTP(writer, request)
 
 	if count == 0 {

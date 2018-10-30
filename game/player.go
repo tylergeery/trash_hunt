@@ -3,7 +3,9 @@ package game
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/goware/emailx"
 	"github.com/tylergeery/trash_hunt/storage"
@@ -149,4 +151,18 @@ func getColumns(m map[string]string) string {
 	}
 
 	return strings.Join(cols, ",")
+}
+
+// GetTestEmail returns a unique test email
+func GetTestEmail() string {
+	c := strconv.Itoa(int(time.Now().UnixNano()))
+
+	return "test+" + c + "@tradesy.com"
+}
+
+// GetTestPlayer returns a unique test user
+func GetTestPlayer() *Player {
+	p, _ := PlayerRegister(GetTestEmail(), "saklfsdlkfsa", "asdflksas TLkdlsff", "")
+
+	return p
 }

@@ -1,36 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
-	"github.com/tylergeery/trash_hunt/http_server/controllers"
+	"github.com/tylergeery/trash_hunt/http_server/router"
 )
 
-func health(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-
-	fmt.Fprintf(w, "Hello %s", r.URL.Path)
-}
-
 func main() {
-	http.HandleFunc("/hello/", health)
+	router := router.GetRouter()
 
-	http.HandleFunc("/player/create", controllers.PlayerCreate)
-	http.HandleFunc("/player/update", controllers.PlayerUpdate)
-	http.HandleFunc("/player/", controllers.PlayerQuery)
-
-	http.HandleFunc("/game/start", controllers.GameStart)
-	http.HandleFunc("/game/status", controllers.GameStatus)
-	http.HandleFunc("/game/complete", controllers.GameComplete)
-
-	http.HandleFunc("/results/leaderboard/", controllers.Results)
-	http.HandleFunc("/results/me", controllers.MyResults)
-
-	http.HandleFunc("/auth", controllers.Auth)
-
-	err := http.ListenAndServe(":9090", nil) // set listen port
+	err := http.ListenAndServe(":9090", router) // set listen port
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}

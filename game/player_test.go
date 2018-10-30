@@ -3,9 +3,7 @@ package game
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"testing"
-	"time"
 
 	_ "github.com/tylergeery/trash_hunt/test"
 )
@@ -48,7 +46,7 @@ func TestPlayerRegisterSuccess(t *testing.T) {
 		args   [4]string
 		player *Player
 	}
-	testEmail := getTestEmail()
+	testEmail := GetTestEmail()
 	testCases := []TestCase{
 		TestCase{
 			args:   [4]string{testEmail, "asdffdssadf", "jk", ""},
@@ -90,7 +88,7 @@ func TestPlayerUpdateError(t *testing.T) {
 }
 
 func TestPlayerUpdate(t *testing.T) {
-	p, _ := PlayerRegister(getTestEmail(), "saklfsdlkfsa", "asdflksas TLkdlsff", "")
+	p, _ := PlayerRegister(GetTestEmail(), "saklfsdlkfsa", "asdflksas TLkdlsff", "")
 
 	p.Name = "Tester"
 	err := p.Update()
@@ -98,10 +96,4 @@ func TestPlayerUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected register err; %s", err)
 	}
-}
-
-func getTestEmail() string {
-	c := strconv.Itoa(int(time.Now().UnixNano()))
-
-	return "test+" + c + "@tradesy.com"
 }
