@@ -13,7 +13,7 @@ import (
 const connectionCount = 10
 
 func main() {
-	service := ":1200"
+	service := ":8080"
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
 	checkError(err)
 

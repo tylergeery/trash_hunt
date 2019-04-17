@@ -4,4 +4,4 @@ ENV POSTGRES_USER 'dev'
 ENV POSTGRES_DB 'dev_secret'
 
 # Copies all seed files to image for initialization
-COPY seed_db /docker-entrypoint-initdb.d/
+COPY ./seed_db/* /docker-entrypoint-initdb.d/

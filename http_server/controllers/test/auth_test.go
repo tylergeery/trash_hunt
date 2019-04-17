@@ -20,7 +20,7 @@ func TestCreateWithInvalidKey(t *testing.T) {
 
 	body := []byte{}
 	resp.Result().Body.Read(body)
-	fmt.Println(resp.Result())
+	fmt.Println(resp.Result().Body)
 	test.ExpectEqualString(t, "Invalid key supplied", string(body))
 }
 

@@ -10,7 +10,7 @@ import (
 func main() {
 	router := router.GetRouter()
 
-	err := http.ListenAndServe(":9090", router) // set listen port
+	err := http.ListenAndServe(":8080", router) // set listen port
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
