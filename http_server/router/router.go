@@ -25,6 +25,8 @@ func GetRouter() *mux.Router {
 
 	router.HandleFunc("/hello/", health)
 
+	router.HandleFunc("/login/", middleware.LogRequest(m(controllers.PlayerLogin)))
+
 	router.Handle("/player/create", middleware.LogRequest(m(controllers.PlayerCreate)))
 	router.Handle("/player/update", middleware.LogRequestAndValidate(m(controllers.PlayerUpdate)))
 	router.Handle("/player/delete", middleware.LogRequestAndValidate(m(controllers.PlayerDelete)))

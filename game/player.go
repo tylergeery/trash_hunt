@@ -11,7 +11,6 @@ import (
 	"github.com/tylergeery/trash_hunt/storage"
 )
 
-const dbTable = "player"
 const minPasswordLength = 8
 
 // Player is a given player in the game
@@ -86,10 +85,10 @@ func (p *Player) save() error {
 	}
 
 	if p.ID == 0 {
-		id, err = storage.Insert(dbTable, p.toCreateMap(), types)
+		id, err = storage.Insert(storage.TABLE_PLAYER, p.toCreateMap(), types)
 		p.ID = id
 	} else {
-		err = storage.Update(dbTable, p.toUpdateMap(), types, p.ID)
+		err = storage.Update(storage.TABLE_PLAYER, p.toUpdateMap(), types, p.ID)
 	}
 
 	return err
@@ -100,9 +99,21 @@ func PlayerGetByToken(authToken string) *Player {
 	var ID int64
 	var email, pw, name, facebookID, token, createdAt, updatedAt string
 
-	query := fmt.Sprintf("SELECT %s FROM %s WHERE token = $1", getColumns(types), dbTable)
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE token = $1", getColumns(types), storage.TABLE_PLAYER)
 
 	storage.FetchRow(query, authToken).Scan(&ID, &email, &pw, &name, &facebookID, &token, &createdAt, &updatedAt)
+
+	return PlayerNew(ID, email, pw, name, facebookID, token, createdAt, updatedAt)
+}
+
+// PlayerGetByEmail retrieves player based on email
+func PlayerGetByEmail(user_email string) *Player {
+	var ID int64
+	var email, pw, name, facebookID, token, createdAt, updatedAt string
+
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE email = $1", getColumns(types), storage.TABLE_PLAYER)
+
+	storage.FetchRow(query, user_email).Scan(&ID, &email, &pw, &name, &facebookID, &token, &createdAt, &updatedAt)
 
 	return PlayerNew(ID, email, pw, name, facebookID, token, createdAt, updatedAt)
 }
@@ -115,8 +126,16 @@ func (p *Player) toSaveMap() map[string]interface{} {
 	}
 }
 
+// ValidatePassword ensures that the provided password is correct for user
+func (p *Player) ValidatePassword(pw string) bool {
+	// TODO: handle pw encryption
+	return pw == p.pw
+}
+
 func (p *Player) toCreateMap() map[string]interface{} {
 	m := p.toSaveMap()
+
+	// TODO: handle password encryption
 	m["password"] = p.pw
 
 	return m

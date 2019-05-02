@@ -10,6 +10,8 @@ import (
 	"github.com/tylergeery/trash_hunt/test"
 )
 
+// TestCreateWithInvalidKey
+// Expect that we cannot create a temporary auth token without a valid user token
 func TestCreateWithInvalidKey(t *testing.T) {
 	player := game.GetTestPlayer()
 	token, _ := auth.CreateToken(player)
@@ -24,6 +26,8 @@ func TestCreateWithInvalidKey(t *testing.T) {
 	test.ExpectEqualString(t, "Invalid key supplied", string(body))
 }
 
+// TestCreateAuthToken
+// Test that we can retrieve a tempory auth token from valid user key
 func TestCreateAuthToken(t *testing.T) {
 
 }
