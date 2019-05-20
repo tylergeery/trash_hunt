@@ -1,3 +1,5 @@
-FROM golang:latest
+FROM trash-hunt-image-go-dev:latest
 
-ENV TOKEN_SIGNING_VALUE 'hello_world'
+WORKDIR /go/src/github.com/tylergeery/trash_hunt/api_server
+
+RUN go get .

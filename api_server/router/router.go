@@ -3,16 +3,17 @@ package router
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/tylergeery/trash_hunt/http_server/controllers"
-	"github.com/tylergeery/trash_hunt/http_server/middleware"
+	"github.com/tylergeery/trash_hunt/api_server/controllers"
+	"github.com/tylergeery/trash_hunt/api_server/middleware"
 )
 
 func health(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
-	fmt.Fprintf(w, "Hello %s", r.URL.Path)
+	fmt.Fprintf(w, "Hello %s", strings.TrimPrefix(r.URL.Path, "/hello/"))
 }
 
 func m(f func(w http.ResponseWriter, r *http.Request)) http.Handler {
@@ -25,7 +26,7 @@ func GetRouter() *mux.Router {
 
 	router.HandleFunc("/hello/", health)
 
-	router.HandleFunc("/login/", middleware.LogRequest(m(controllers.PlayerLogin)))
+	router.Handle("/login/", middleware.LogRequest(m(controllers.PlayerLogin)))
 
 	router.Handle("/player/create", middleware.LogRequest(m(controllers.PlayerCreate)))
 	router.Handle("/player/update", middleware.LogRequestAndValidate(m(controllers.PlayerUpdate)))
