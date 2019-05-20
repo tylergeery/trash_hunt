@@ -12,6 +12,8 @@ image_postgres=trash-hunt-image-pg
 image_tcp_server=trash-hunt-image-tcp
 image_api_server=trash-hunt-image-api
 
+.PHONY: clean dev kill test
+
 dev:
 	docker run -p 5432:5432 --name $(container_postgres) -d $(image_postgres)
 	docker run -p 6379:6379 --name $(container_redis) -d $(image_redis)
@@ -37,4 +39,4 @@ pg:
 	docker exec -it $(container_postgres) psql -U dev -W dev_secret dev_secret
 
 test:
-	docker exec -it $(container_api_server) go test ...
+	docker exec -it $(container_api_server) go test ./...
