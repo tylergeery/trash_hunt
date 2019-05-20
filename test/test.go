@@ -1,28 +1,15 @@
 package test
 
 import (
-	"log"
 	"os"
-	"os/exec"
 	"strings"
 	"testing"
 )
 
 // SetVars for testing
 func init() {
-	cmd := exec.Command("docker", "inspect", "--format", "'{{ .NetworkSettings.IPAddress }}'", "trash-hunt-redis")
-	redis, err := cmd.CombinedOutput()
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	cmd = exec.Command("docker", "inspect", "--format", "'{{ .NetworkSettings.IPAddress }}'", "trash-hunt-pg")
-	pg, err := cmd.CombinedOutput()
-
-	if err != nil {
-		log.Fatal(err)
-	}
+	redis := os.Getenv("REDIS_HOST")
+	pg := os.Getenv("PG_HOST")
 
 	// set persistent storage
 	os.Setenv("DB_USER", "dev")

@@ -39,4 +39,8 @@ pg:
 	docker exec -it $(container_postgres) psql -U dev -W dev_secret dev_secret
 
 test:
-	docker exec -it $(container_api_server) go test ./...
+	pg_host=
+	redis_host=
+	docker exec -it $(container_api_server) /bin/bash -c "export PG_HOST=$(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' $(container_postgres)) && \
+		export REDIS_HOST=$(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' $(container_redis)) && \
+		go test ./..."
