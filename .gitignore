@@ -11,6 +11,6 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# Dev ffresh (hot-reload)
+# fresh created directory for dev envs (hot-reload)
 api_server/tmp
 tcp_server/tmp
