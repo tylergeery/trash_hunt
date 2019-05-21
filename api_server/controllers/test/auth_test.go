@@ -1,7 +1,10 @@
 package test
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/tylergeery/trash_hunt/auth"
@@ -15,17 +18,30 @@ func TestCreateWithInvalidKey(t *testing.T) {
 	player := game.GetTestPlayer()
 	token, _ := auth.CreateToken(player)
 
-	resp := GetControllerResponse(t, "POST", "/auth", nil, map[string]string{"Authorization": "Bearer " + token})
+	resp := GetControllerResponse(t, "POST", "/v1/auth", nil, map[string]string{"Authorization": "Bearer " + token, "Content-Type": "application/json"})
 
 	test.ExpectEqualInt64s(t, int64(http.StatusBadRequest), int64(resp.Result().StatusCode))
-
-	body := []byte{}
-	resp.Result().Body.Read(body)
-	test.ExpectEqualString(t, "Invalid key supplied", string(body))
 }
 
 // TestCreateAuthToken
 // Test that we can retrieve a tempory auth token from valid user key
 func TestCreateAuthToken(t *testing.T) {
+	player := game.GetTestPlayer()
+	token, _ := auth.CreateToken(player)
+	req := map[string]string{
+		"key": token,
+	}
+	content, _ := json.Marshal(req)
+	body := strings.NewReader(string(content))
 
+	resp := GetControllerResponse(t, "POST", "/v1/auth", body, map[string]string{"Authorization": "Bearer " + token, "Content-Type": "application/json"})
+
+	test.ExpectEqualInt64s(t, int64(http.StatusOK), int64(resp.Result().StatusCode))
+
+	var s struct {
+		Token string `json:"token"`
+	}
+	str, _ := ioutil.ReadAll(resp.Body)
+	json.Unmarshal(str, &s)
+	test.ExpectNotEmptyString(t, s.Token)
 }

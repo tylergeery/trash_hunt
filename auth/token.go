@@ -17,7 +17,7 @@ func init() {
 
 // CreateToken creates auth token for player
 func CreateToken(player *game.Player) (string, error) {
-	dur, _ := time.ParseDuration("10m")
+	dur, _ := time.ParseDuration("60m")
 	claims := jwt.MapClaims{
 		"player_id": player.ID,
 		"nbf":       time.Now().Unix(),

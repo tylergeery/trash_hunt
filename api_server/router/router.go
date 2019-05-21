@@ -2,45 +2,60 @@ package router
 
 import (
 	"fmt"
-	"net/http"
-	"strings"
 
-	"github.com/gorilla/mux"
+	"github.com/go-ozzo/ozzo-routing"
+	"github.com/go-ozzo/ozzo-routing/content"
+	"github.com/go-ozzo/ozzo-routing/cors"
 	"github.com/tylergeery/trash_hunt/api_server/controllers"
 	"github.com/tylergeery/trash_hunt/api_server/middleware"
 )
 
-func health(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-
-	fmt.Fprintf(w, "Hello %s", strings.TrimPrefix(r.URL.Path, "/hello/"))
-}
-
-func m(f func(w http.ResponseWriter, r *http.Request)) http.Handler {
-	return http.HandlerFunc(f)
+func health(c *routing.Context) error {
+	return c.Write(fmt.Sprintf("Hello %s", c.Param("name")))
 }
 
 // GetRouter returns a new Mux Router
-func GetRouter() *mux.Router {
-	router := mux.NewRouter().StrictSlash(true)
+func GetRouter() *routing.Router {
+	router := routing.New()
 
-	router.HandleFunc("/hello/", health)
+	router.Get(`/hello/<name:\w+>`, health)
+	router.Post(
+		"/login/",
+		middleware.LogRequest(),
+		content.TypeNegotiator(content.JSON),
+		cors.Handler(cors.Options{
+			AllowOrigins: "*",
+			AllowHeaders: "*",
+			AllowMethods: "*",
+		}),
+		controllers.PlayerLogin,
+	)
 
-	router.Handle("/login/", middleware.LogRequest(m(controllers.PlayerLogin)))
+	rg := router.Group("/v1")
+	rg.Use(
+		middleware.LogRequest(),
+		middleware.ValidateToken(),
+		content.TypeNegotiator(content.JSON),
+		cors.Handler(cors.Options{
+			AllowOrigins: "*",
+			AllowHeaders: "*",
+			AllowMethods: "*",
+		}),
+	)
 
-	router.Handle("/player/create", middleware.LogRequest(m(controllers.PlayerCreate)))
-	router.Handle("/player/update", middleware.LogRequestAndValidate(m(controllers.PlayerUpdate)))
-	router.Handle("/player/delete", middleware.LogRequestAndValidate(m(controllers.PlayerDelete)))
-	router.Handle("/player/", middleware.LogRequestAndValidate(m(controllers.PlayerQuery)))
+	rg.Post("/player/create", controllers.PlayerCreate)
+	rg.Post("/player/update", controllers.PlayerUpdate)
+	rg.Post("/player/delete", controllers.PlayerDelete)
+	rg.Get("/player/", controllers.PlayerQuery)
 
-	router.Handle("/game/start", middleware.LogRequestAndValidate(m(controllers.GameStart)))
-	router.Handle("/game/status", middleware.LogRequestAndValidate(m(controllers.GameStatus)))
-	router.Handle("/game/complete", middleware.LogRequestAndValidate(m(controllers.GameComplete)))
+	rg.Post("/game/start", controllers.GameStart)
+	rg.Get("/game/status", controllers.GameStatus)
+	rg.Post("/game/complete", controllers.GameComplete)
 
-	router.Handle("/results/leaderboard/", middleware.LogRequestAndValidate(m(controllers.Results)))
-	router.Handle("/results/me", middleware.LogRequestAndValidate(m(controllers.MyResults)))
+	rg.Get("/results/leaderboard/", controllers.Results)
+	rg.Get("/results/me", controllers.MyResults)
 
-	router.Handle("/auth", middleware.LogRequestAndValidate(m(controllers.CreateAuthToken)))
+	rg.Post("/auth", controllers.CreateAuthToken)
 
 	return router
 }

@@ -1,27 +1,20 @@
 package controllers
 
 import (
-	"fmt"
-	"net/http"
+	"github.com/go-ozzo/ozzo-routing"
 )
 
 // GameStart - Create a new game
-func GameStart(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-
-	fmt.Fprintf(w, "Hello %s", r.URL.Path)
+func GameStart(c *routing.Context) error {
+	return nil
 }
 
 // GameStatus - Read game status
-func GameStatus(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-
-	fmt.Fprintf(w, "Hello %s", r.URL.Path)
+func GameStatus(c *routing.Context) error {
+	return nil
 }
 
 // GameComplete - Finish a game and create results
-func GameComplete(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-
-	fmt.Fprintf(w, "Hello %s", r.URL.Path)
+func GameComplete(c *routing.Context) error {
+	return nil
 }

@@ -37,6 +37,13 @@ func ExpectEqualString(t *testing.T, expected, actual string) {
 	}
 }
 
+// ExpectNotEmptyString expects string to not be empty
+func ExpectNotEmptyString(t *testing.T, actual string) {
+	if actual == "" {
+		t.Fatalf("Expected not empty string value")
+	}
+}
+
 // ExpectEqualInt64s expects int64 values to be equal
 func ExpectEqualInt64s(t *testing.T, expected, actual int64) {
 	if expected != actual {

@@ -41,4 +41,4 @@ pg:
 test:
 	docker exec -it $(container_api_server) /bin/bash -c "export PG_HOST=$(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' $(container_postgres)) && \
 		export REDIS_HOST=$(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' $(container_redis)) && \
-		go test ./..."
+		go test ../..."

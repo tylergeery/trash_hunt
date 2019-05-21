@@ -5,16 +5,19 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/go-ozzo/ozzo-routing"
 )
 
-func logRequest(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer func(begin time.Time) {
+func logRequest() func(c *routing.Context) error {
+	return func(begin time.Time) func(c *routing.Context) error {
+		return func(c *routing.Context) error {
+			r := c.Request
 			log.Printf("%s %s %s - %dμs\n", r.Method, r.URL.Path, getToken(r), time.Since(begin).Nanoseconds()/1000)
-		}(time.Now())
 
-		next.ServeHTTP(w, r)
-	})
+			return nil
+		}
+	}(time.Now())
 }
 
 func getToken(r *http.Request) string {
