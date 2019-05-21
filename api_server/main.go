@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/tylergeery/trash_hunt/http_server/router"
+	"github.com/tylergeery/trash_hunt/api_server/router"
 )
 
 func main() {

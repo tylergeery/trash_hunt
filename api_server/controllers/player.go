@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/tylergeery/trash_hunt/auth"
@@ -30,14 +31,15 @@ func PlayerCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// return player to the client
+	json.Marshal(token)
 }
 
 // PlayerLogin - Login the current player (get their auth token)
 func PlayerLogin(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
-	email := r.Form.Get("email")
-	pw := r.Form.Get("pw")
+	_ = r.Form.Get("email")
+	_ = r.Form.Get("pw")
 
 	// Find user by email and password
 
