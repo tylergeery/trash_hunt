@@ -38,10 +38,9 @@ func TestCreateAuthToken(t *testing.T) {
 
 	test.ExpectEqualInt64s(t, int64(http.StatusOK), int64(resp.Result().StatusCode))
 
-	var s struct {
-		Token string `json:"token"`
-	}
+	var m map[string]interface{}
 	str, _ := ioutil.ReadAll(resp.Body)
-	json.Unmarshal(str, &s)
-	test.ExpectNotEmptyString(t, s.Token)
+	json.Unmarshal(str, &m)
+
+	test.ExpectNotEmptyString(t, m["token"].(string))
 }

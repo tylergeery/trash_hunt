@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/go-ozzo/ozzo-routing"
@@ -26,14 +25,10 @@ func CreateAuthToken(c *routing.Context) error {
 	// Create temp auth token
 	token, err := auth.CreateToken(player)
 	if err != nil {
-		return routing.NewHTTPError(http.StatusBadRequest, "Invalid key supplied")
+		return routing.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	resp := responses.AuthTokenCreateResponse{Token: token}
-	output, err := json.Marshal(resp)
-	if err != nil {
-		return routing.NewHTTPError(http.StatusBadRequest)
-	}
 
-	return c.Write(output)
+	return c.Write(resp)
 }
