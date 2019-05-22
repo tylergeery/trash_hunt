@@ -1,64 +1,69 @@
 package controllers
 
 import (
-	"encoding/json"
-	"net/http"
-
+	"github.com/go-ozzo/ozzo-routing"
+	"github.com/tylergeery/trash_hunt/api_server/requests"
+	"github.com/tylergeery/trash_hunt/api_server/responses"
 	"github.com/tylergeery/trash_hunt/auth"
 	"github.com/tylergeery/trash_hunt/game"
 )
 
 // PlayerCreate - Register/Signup a player
-func PlayerCreate(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-
+func PlayerCreate(c *routing.Context) error {
 	// gather player info
-	email := r.Form.Get("email")
-	pw := r.Form.Get("pw")
-	name := r.Form.Get("name")
-	facebookID := r.Form.Get("facebook_id")
+	var req requests.PlayerCreateRequest
+	err := c.Read(&req)
+	if err != nil {
+		return err
+	}
 
 	// insert new player into DB
-	player, err := game.PlayerRegister(email, pw, name, facebookID)
+	player, err := game.PlayerRegister(req.Email, req.Pw, req.Name, req.FacebookID)
 	if err != nil {
-		// TODO: generate error response
+		return err
 	}
 
 	// create a (permanent) jwt token for player
 	token, err := auth.CreateToken(player)
 	if err != nil {
-		// TODO: generate "logged out" response
+		return err
 	}
 
 	// return player to the client
-	json.Marshal(token)
+	resp := responses.PlayerCreateResponse{
+		Token: token,
+	}
+
+	return c.Write(resp)
 }
 
 // PlayerLogin - Login the current player (get their auth token)
-func PlayerLogin(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-
-	_ = r.Form.Get("email")
-	_ = r.Form.Get("pw")
+func PlayerLogin(c *routing.Context) error {
+	var req requests.PlayerLoginRequest
+	err := c.Read(&req)
+	if err != nil {
+		return err
+	}
 
 	// Find user by email and password
 
 	// TODO: add rate limiting for failures on email/ip
 
 	// Return User w/ token
+	return nil
 }
 
 // PlayerUpdate - Edit a player
-func PlayerUpdate(w http.ResponseWriter, r *http.Request) {
-
+func PlayerUpdate(c *routing.Context) error {
+	return nil
 }
 
 // PlayerDelete - Delete a player
-func PlayerDelete(w http.ResponseWriter, r *http.Request) {
-
+func PlayerDelete(c *routing.Context) error {
+	return nil
 }
 
 // PlayerQuery - Get information for a given player
-func PlayerQuery(w http.ResponseWriter, r *http.Request) {
-
+func PlayerQuery(c *routing.Context) error {
+	return nil
 }

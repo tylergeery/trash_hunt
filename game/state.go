@@ -59,7 +59,6 @@ func (s *State) IsValid() bool {
 	outcomes := map[string]bool{}
 	visited := []Pos{}
 
-	// fmt.Printf("Checking if player can finish: (%d, %d)\n", s.Player1.Pos.X, s.Player2.Pos.Y)
 	return s.PlayerCanFinish(s.Player1, outcomes, visited) && s.PlayerCanFinish(s.Player2, outcomes, visited)
 }
 

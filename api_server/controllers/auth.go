@@ -1,9 +1,11 @@
 package controllers
 
 import (
-	"encoding/json"
 	"net/http"
 
+	"github.com/go-ozzo/ozzo-routing"
+	"github.com/tylergeery/trash_hunt/api_server/requests"
+	"github.com/tylergeery/trash_hunt/api_server/responses"
 	"github.com/tylergeery/trash_hunt/auth"
 	"github.com/tylergeery/trash_hunt/game"
 )
@@ -11,35 +13,22 @@ import (
 type key string
 
 // CreateAuthToken generates a new auth token for use
-func CreateAuthToken(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-
-	// Get player key
-	key := r.Form.Get("key")
-
-	if key == "" {
-		//response.Fail(w, http.StatusBadRequest, "Invalid key supplied")
-		return
+func CreateAuthToken(c *routing.Context) error {
+	req := requests.NewCreateAuthTokenRequest(c)
+	if err := req.Validate(); err != nil {
+		return routing.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	// Look up player
-	player := game.PlayerGetByToken(string(key[0]))
+	player := game.PlayerGetByToken(req.Key)
 
 	// Create temp auth token
 	token, err := auth.CreateToken(player)
-
-	// Send back to client
 	if err != nil {
-		// response.Fail(w, http.StatusBadRequest, err.Error())
-		return
+		return routing.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	resp, err := json.Marshal(map[string]string{"token": token})
-	if err != nil {
-		// response.Fail(w, http.StatusInternalServerError, err.Error())
-		return
-	}
+	resp := responses.AuthTokenCreateResponse{Token: token}
 
-	w.Write(resp)
-	// response.Success(w, resp)
+	return c.Write(resp)
 }

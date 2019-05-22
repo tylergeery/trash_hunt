@@ -1,20 +1,13 @@
 package controllers
 
-import (
-	"fmt"
-	"net/http"
-)
+import routing "github.com/go-ozzo/ozzo-routing"
 
 // Results - get results for game
-func Results(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-
-	fmt.Fprintf(w, "Hello %s", r.URL.Path)
+func Results(c *routing.Context) error {
+	return nil
 }
 
 // MyResults - get results for my games
-func MyResults(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-
-	fmt.Fprintf(w, "Hello %s", r.URL.Path)
+func MyResults(c *routing.Context) error {
+	return nil
 }
