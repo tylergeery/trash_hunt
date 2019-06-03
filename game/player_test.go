@@ -46,7 +46,7 @@ func TestPlayerRegisterSuccess(t *testing.T) {
 		args   [4]string
 		player *Player
 	}
-	testEmail := GetTestEmail()
+	testEmail := GetTestEmail("success")
 	testCases := []TestCase{
 		TestCase{
 			args:   [4]string{testEmail, "asdffdssadf", "jk", ""},
@@ -88,7 +88,7 @@ func TestPlayerUpdateError(t *testing.T) {
 }
 
 func TestPlayerUpdate(t *testing.T) {
-	p, _ := PlayerRegister(GetTestEmail(), "saklfsdlkfsa", "asdflksas TLkdlsff", "")
+	p, _ := PlayerRegister(GetTestEmail("update"), "saklfsdlkfsa", "asdflksas TLkdlsff", "")
 
 	p.Name = "Tester"
 	err := p.Update()

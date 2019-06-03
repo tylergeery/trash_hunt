@@ -10,4 +10,4 @@ CREATE TABLE player (
 );
 
 INSERT INTO player (email, password, name)
-VALUES ('tyler@geerydev.com', 'test', 'Tyler Geery');
+VALUES ('tyler+first@geerydev.com', 'test', 'Tyler Geery');

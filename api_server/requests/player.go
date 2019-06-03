@@ -2,7 +2,7 @@ package requests
 
 // PlayerCreateRequest - Request structure for PlayerCreate request
 type PlayerCreateRequest struct {
-	Email      string `json:"id"`
+	Email      string `json:"email"`
 	Pw         string `json:"pw"`
 	Name       string `json:"name"`
 	FacebookID string `json:"facebookID"`

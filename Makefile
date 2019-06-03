@@ -13,17 +13,18 @@ image_tcp_server=trash-hunt-image-tcp
 image_api_server=trash-hunt-image-api
 
 .PHONY: clean dev kill test
+.DEFAULT_GOAL := help
 
-dev:
+dev: ## Get a dev docker environment up and running
 	docker run -p 5432:5432 --name $(container_postgres) -d $(image_postgres)
 	docker run -p 6379:6379 --name $(container_redis) -d $(image_redis)
 	docker run -p 3001:8080 -v $(shell pwd):/go/src/github.com/tylergeery/trash_hunt/ --name $(container_tcp_server) -d $(image_tcp_server)
 	docker run -p 3000:8080 -v $(shell pwd):/go/src/github.com/tylergeery/trash_hunt/ --name $(container_api_server) -d $(image_api_server)
 
-clean:
+clean: ## Remove local docker images
 	- docker rmi $(image_api_server) $(image_tcp_server) $(image_go_dev) $(image_postgres)
 
-images:
+images: ## Make dev docker images
 	docker build -f $(image_path)/Dockerfile_go_dev -t $(image_go_dev) $(build_path)
 	docker build -f $(image_path)/Dockerfile_postgres -t $(image_postgres) $(build_path)
 	docker build -f $(image_path)/Dockerfile_tcp -t $(image_tcp_server) $(build_path)
@@ -32,13 +33,17 @@ images:
 kill:
 	- docker kill $(container_api_server) $(container_tcp_server) $(container_postgres) $(container_redis)
 
-remove: kill
+remove: kill ## Tear down local dev environment
 	- docker rm $(container_api_server) $(container_tcp_server) $(container_postgres) $(container_redis)
 
-pg:
+pg: ## Exec into local pg instance
 	docker exec -it $(container_postgres) psql -U dev -W dev_secret dev_secret
 
-test:
+test: ## Run tests with local docker env
 	docker exec -it $(container_api_server) /bin/bash -c "export PG_HOST=$(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' $(container_postgres)) && \
 		export REDIS_HOST=$(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' $(container_redis)) && \
+		export DB_SSL_MODE=disable && \
 		go test ../..."
+
+help:
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

@@ -15,7 +15,7 @@ import (
 // TestCreateWithInvalidKey
 // Expect that we cannot create a temporary auth token without a valid user token
 func TestCreateWithInvalidKey(t *testing.T) {
-	player := game.GetTestPlayer()
+	player := game.GetTestPlayer("invalid-key")
 	token, _ := auth.CreateToken(player)
 
 	resp := GetControllerResponse(t, "POST", "/v1/auth", nil, map[string]string{"Authorization": "Bearer " + token, "Content-Type": "application/json"})
@@ -26,7 +26,7 @@ func TestCreateWithInvalidKey(t *testing.T) {
 // TestCreateAuthToken
 // Test that we can retrieve a tempory auth token from valid user key
 func TestCreateAuthToken(t *testing.T) {
-	player := game.GetTestPlayer()
+	player := game.GetTestPlayer("create-auth")
 	token, _ := auth.CreateToken(player)
 	req := map[string]string{
 		"key": token,

@@ -58,6 +58,10 @@ func PlayerRegister(email, pw, name, facebookID string) (*Player, error) {
 	}
 
 	// Validate email is unique
+	existing := PlayerGetByEmail(email)
+	if existing.ID != 0 {
+		return nil, fmt.Errorf("Email %s belongs to an existing user", email)
+	}
 
 	p := PlayerNew(0, email, pw, name, facebookID, "", "", "")
 	err := p.save()
@@ -107,13 +111,13 @@ func PlayerGetByToken(authToken string) *Player {
 }
 
 // PlayerGetByEmail retrieves player based on email
-func PlayerGetByEmail(user_email string) *Player {
+func PlayerGetByEmail(userEmail string) *Player {
 	var ID int64
 	var email, pw, name, facebookID, token, createdAt, updatedAt string
 
-	query := fmt.Sprintf("SELECT %s FROM %s WHERE email = $1", getColumns(types), storage.TABLE_PLAYER)
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE email = '$1'", getColumns(types), storage.TABLE_PLAYER)
 
-	storage.FetchRow(query, user_email).Scan(&ID, &email, &pw, &name, &facebookID, &token, &createdAt, &updatedAt)
+	storage.FetchRow(query, userEmail).Scan(&ID, &email, &pw, &name, &facebookID, &token, &createdAt, &updatedAt)
 
 	return PlayerNew(ID, email, pw, name, facebookID, token, createdAt, updatedAt)
 }
@@ -173,15 +177,15 @@ func getColumns(m map[string]string) string {
 }
 
 // GetTestEmail returns a unique test email
-func GetTestEmail() string {
+func GetTestEmail(ident string) string {
 	c := strconv.Itoa(int(time.Now().UnixNano()))
 
-	return "test+" + c + "@tradesy.com"
+	return fmt.Sprintf("test%s%s@geerydev.com", ident, c)
 }
 
 // GetTestPlayer returns a unique test user
-func GetTestPlayer() *Player {
-	p, _ := PlayerRegister(GetTestEmail(), "saklfsdlkfsa", "asdflksas TLkdlsff", "")
+func GetTestPlayer(ident string) *Player {
+	p, _ := PlayerRegister(GetTestEmail(ident), "saklfsdlkfsa", "asdflksas TLkdlsff", "")
 
 	return p
 }

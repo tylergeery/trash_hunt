@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"net/http"
+
 	"github.com/go-ozzo/ozzo-routing"
 	"github.com/tylergeery/trash_hunt/api_server/requests"
 	"github.com/tylergeery/trash_hunt/api_server/responses"
@@ -14,19 +16,19 @@ func PlayerCreate(c *routing.Context) error {
 	var req requests.PlayerCreateRequest
 	err := c.Read(&req)
 	if err != nil {
-		return err
+		return routing.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	// insert new player into DB
 	player, err := game.PlayerRegister(req.Email, req.Pw, req.Name, req.FacebookID)
 	if err != nil {
-		return err
+		return routing.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	// create a (permanent) jwt token for player
 	token, err := auth.CreateToken(player)
 	if err != nil {
-		return err
+		return routing.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	// return player to the client

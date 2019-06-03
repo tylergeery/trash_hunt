@@ -30,6 +30,17 @@ func GetRouter() *routing.Router {
 		}),
 		controllers.PlayerLogin,
 	)
+	router.Post(
+		"/v1/player/create",
+		middleware.LogRequest(),
+		content.TypeNegotiator(content.JSON),
+		cors.Handler(cors.Options{
+			AllowOrigins: "*",
+			AllowHeaders: "*",
+			AllowMethods: "*",
+		}),
+		controllers.PlayerCreate,
+	)
 
 	rg := router.Group("/v1")
 	rg.Use(
@@ -43,7 +54,6 @@ func GetRouter() *routing.Router {
 		}),
 	)
 
-	rg.Post("/player/create", controllers.PlayerCreate)
 	rg.Post("/player/update", controllers.PlayerUpdate)
 	rg.Post("/player/delete", controllers.PlayerDelete)
 	rg.Get("/player/", controllers.PlayerQuery)
