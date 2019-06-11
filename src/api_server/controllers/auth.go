@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"github.com/go-ozzo/ozzo-routing"
-	"github.com/tylergeery/trash_hunt/api_server/requests"
-	"github.com/tylergeery/trash_hunt/api_server/responses"
-	"github.com/tylergeery/trash_hunt/auth"
-	"github.com/tylergeery/trash_hunt/game"
+	"github.com/tylergeery/trash_hunt/src/api_server/requests"
+	"github.com/tylergeery/trash_hunt/src/api_server/responses"
+	"github.com/tylergeery/trash_hunt/src/auth"
+	"github.com/tylergeery/trash_hunt/src/game"
 )
 
 type key string

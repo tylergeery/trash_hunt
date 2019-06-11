@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/goware/emailx"
-	"github.com/tylergeery/trash_hunt/storage"
+	"github.com/tylergeery/trash_hunt/src/storage"
 )
 
 const minPasswordLength = 8

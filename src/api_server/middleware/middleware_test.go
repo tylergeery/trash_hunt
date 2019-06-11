@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/go-ozzo/ozzo-routing"
-	"github.com/tylergeery/trash_hunt/auth"
-	"github.com/tylergeery/trash_hunt/game"
+	"github.com/tylergeery/trash_hunt/src/auth"
+	"github.com/tylergeery/trash_hunt/src/game"
 )
 
 type TestWriter struct {

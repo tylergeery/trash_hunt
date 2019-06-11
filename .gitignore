@@ -12,5 +12,4 @@
 *.out
 
 # Go dep
-api_server/vendor
-tcp_server/vendor
+src/vendor

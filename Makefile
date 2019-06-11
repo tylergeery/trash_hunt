@@ -21,14 +21,14 @@ image_postgres_dev=trash-hunt-image-pg-dev
 image_tcp_server_dev=trash-hunt-image-tcp-dev
 image_api_server_dev=trash-hunt-image-api-dev
 
-.PHONY: help dev
+.PHONY: help dev test
 .DEFAULT_GOAL := help
 
 dev: ## Get a dev docker environment up and running
 	docker run -p 5432:5432 --name $(container_postgres_dev) -d $(image_postgres_dev)
 	docker run -p 6379:6379 --name $(container_redis_dev) -d $(image_redis_dev)
-	docker run -p 3001:8080 -v $(shell pwd):/go/src/github.com/tylergeery/trash_hunt/ --name $(container_tcp_server_dev) -d $(image_tcp_server_dev)
-	docker run -p 3000:8080 -v $(shell pwd):/go/src/github.com/tylergeery/trash_hunt/ --name $(container_api_server_dev) -d $(image_api_server_dev)
+	docker run -p 3001:8080 -v $(shell pwd)/src:/go/src/github.com/tylergeery/trash_hunt/src/ --name $(container_tcp_server_dev) -d $(image_tcp_server_dev)
+	docker run -p 3000:8080 -v $(shell pwd)/src:/go/src/github.com/tylergeery/trash_hunt/src/ --name $(container_api_server_dev) -d $(image_api_server_dev)
 
 dev-clean: ## Remove local docker images
 	- docker rmi $(image_api_server_dev) $(image_tcp_server_dev) $(image_postgres_dev)

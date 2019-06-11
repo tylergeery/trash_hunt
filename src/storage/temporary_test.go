@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	_ "github.com/tylergeery/trash_hunt/test"
+	_ "github.com/tylergeery/trash_hunt/src/test"
 )
 
 func TestQueryKeyNonexistent(t *testing.T) {

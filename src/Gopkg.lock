@@ -37,15 +37,9 @@
   revision = "bc6a3c0594130b1e34005880bc600b6d3f49fa7f"
   version = "v1.1.1"
 
-[[projects]]
-  branch = "master"
-  name = "github.com/tylergeery/trash_hunt"
-  packages = ["auth","game","storage","test"]
-  revision = "d562c51e40540c90050ed9f2c578e514d0ea6e2e"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "585716a35a196de89f77bb0ee0205bbe14374d3a606861bf0097688333046c70"
+  inputs-digest = "00b76f41feca19c2eedbdba95ecbcf18206da2e899957e26b8c68a679a91231f"
   solver-name = "gps-cdcl"
   solver-version = 1

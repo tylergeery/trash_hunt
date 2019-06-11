@@ -5,15 +5,17 @@ ENV GOPATH '/go'
 
 RUN go get -u github.com/golang/dep/cmd/dep
 
-COPY ./ /go/src/github.com/tylergeery/trash_hunt
+WORKDIR /go/src/github.com/tylergeery/trash_hunt/src
+
+COPY ./src .
+
+RUN dep ensure -vendor-only
 
 
 
 FROM base as http_server
 
-WORKDIR /go/src/github.com/tylergeery/trash_hunt/api_server
-
-RUN dep ensure -vendor-only
+WORKDIR /go/src/github.com/tylergeery/trash_hunt/src/api_server
 
 EXPOSE 8080
 
@@ -29,9 +31,7 @@ ENTRYPOINT CompileDaemon -log-prefix=false -build="go build -o /go/bin/http ." -
 
 FROM base as tcp_server
 
-WORKDIR /go/src/github.com/tylergeery/trash_hunt/tcp_server
-
-RUN dep ensure -vendor-only
+WORKDIR /go/src/github.com/tylergeery/trash_hunt/src/tcp_server
 
 EXPOSE 8080
 
