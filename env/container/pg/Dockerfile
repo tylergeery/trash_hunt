@@ -1,5 +1,8 @@
 FROM postgres:latest as base
 
+ENV POSTGRES_DB 'trash_hunt'
+
+
 
 FROM base as dev
 
