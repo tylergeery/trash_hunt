@@ -1,7 +1,0 @@
-FROM postgres:latest
-
-ENV POSTGRES_USER 'dev'
-ENV POSTGRES_DB 'dev_secret'
-
-# Copies all seed files to image for initialization
-COPY ./env/container/seed_db/* /docker-entrypoint-initdb.d/
