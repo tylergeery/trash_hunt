@@ -73,6 +73,12 @@ func TestPlayerRegisterSuccess(t *testing.T) {
 		if p.FacebookID != test.player.FacebookID {
 			t.Fatalf("Expected player FacebookID: %s, received: %s", p.FacebookID, test.player.FacebookID)
 		}
+
+		playerByEmail := PlayerGetByEmail(p.Email)
+		fmt.Println(playerByEmail)
+		if playerByEmail.ID != p.ID {
+			t.Fatalf("PlayerByEmail does not have the correct ID: %d", playerByEmail.ID)
+		}
 	}
 }
 

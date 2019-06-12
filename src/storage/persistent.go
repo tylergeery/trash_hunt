@@ -16,7 +16,7 @@ import (
 var db *sql.DB
 var persistentOnce sync.Once
 
-func ensureConnection() {
+func init() {
 	persistentOnce.Do(func() {
 		openConnection()
 	})
@@ -32,7 +32,7 @@ func openConnection() {
 			os.Getenv("DB_USER"),
 			os.Getenv("DB_PASS"),
 			os.Getenv("DB_HOST"),
-			os.Getenv("DB_TABLE"),
+			os.Getenv("DB_NAME"),
 			os.Getenv("DB_SSL_MODE"),
 		),
 	)
@@ -50,8 +50,6 @@ func closeConnection() {
 func Insert(table string, insert map[string]interface{}, types map[string]string) (int64, error) {
 	var insertID int64
 
-	ensureConnection()
-
 	values := getValues(insert, types)
 	query := fmt.Sprintf("INSERT INTO %s (%s, created_at, updated_at) VALUES (%s, NOW(), NOW()) RETURNING id", table, getColumns(insert), valuesStub(len(insert)))
 	row := db.QueryRow(query, values...)
@@ -62,8 +60,6 @@ func Insert(table string, insert map[string]interface{}, types map[string]string
 
 // Update an existing DB record
 func Update(table string, update map[string]interface{}, types map[string]string, ID int64) error {
-	ensureConnection()
-
 	values := getValues(update, types)
 	query := fmt.Sprintf("UPDATE %s SET (%s, updated_at) = (%s, NOW()) WHERE id = %d", table, getColumns(update), valuesStub(len(update)), ID)
 	_, err := db.Exec(query, values...)
@@ -73,8 +69,6 @@ func Update(table string, update map[string]interface{}, types map[string]string
 
 // Remove an existing DB record
 func Remove(table string, id int64) error {
-	ensureConnection()
-
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", table)
 	_, err := db.Exec(query, id)
 
@@ -83,15 +77,11 @@ func Remove(table string, id int64) error {
 
 // FetchRows for an arbitrary db query
 func FetchRows(query string, args ...interface{}) (*sql.Rows, error) {
-	ensureConnection()
-
 	return db.Query(query, args...)
 }
 
 // FetchRow returns a single record
 func FetchRow(query string, args ...interface{}) *sql.Row {
-	ensureConnection()
-
 	return db.QueryRow(query, args...)
 }
 

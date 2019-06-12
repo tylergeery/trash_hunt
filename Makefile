@@ -56,13 +56,13 @@ dev-rm: dev-kill ## Tear down local dev environment
 	- docker rm $(container_api_server_dev) $(container_tcp_server_dev) $(container_postgres_dev) $(container_redis_dev)
 
 dev-pg: ## Exec into local pg instance
-	docker exec -it $(container_postgres_dev) psql -U dev -W dev_secret dev_secret
+	docker exec -it $(container_postgres_dev) psql -U $(db_user_dev) $(db_name_dev)
 
 test: ## Run tests with local docker env
 	$(eval $@_DB_HOST := $(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' $(container_postgres_dev)))
 	$(eval $@_REDIS_HOST := $(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' $(container_redis_dev)))
 	$(eval $@_API_ENV := -e DB_HOST=$($@_DB_HOST) -e DB_NAME=$(db_name_dev) -e DB_PASS=$(db_pass_dev) -e DB_USER=$(db_user_dev) -e DB_SSL_MODE=disable -e REDIS_HOST=$($@_REDIS_HOST))
-	docker exec $($@_API_ENV) -it $(container_api_server_dev) /bin/bash -c "go test ./..."
+	docker exec $($@_API_ENV) -it $(container_api_server_dev) /bin/bash -c "go test ../..."
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

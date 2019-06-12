@@ -63,7 +63,7 @@ func TestAttemptCreatePlayerAndCannotReuseEmail(t *testing.T) {
 	body := strings.NewReader(string(player_encoded))
 	resp := GetControllerResponse(t, "POST", "/v1/player/create", body, map[string]string{"Content-Type": "application/json"})
 
-	fmt.Println(resp)
+	fmt.Printf("\n\nresp: %v\n\n\n", resp)
 	test.ExpectEqualInt64s(t, int64(http.StatusOK), int64(resp.Result().StatusCode))
 
 	player["name"] = "Different Test Name"

@@ -115,8 +115,9 @@ func PlayerGetByEmail(userEmail string) *Player {
 	var ID int64
 	var email, pw, name, facebookID, token, createdAt, updatedAt string
 
-	query := fmt.Sprintf("SELECT %s FROM %s WHERE email = '$1'", getColumns(types), storage.TABLE_PLAYER)
+	query := fmt.Sprintf("SELECT id, email, pw, name, facebook_id, token, created_at, updated_at FROM %s WHERE email=$1", storage.TABLE_PLAYER)
 
+	fmt.Println(query)
 	storage.FetchRow(query, userEmail).Scan(&ID, &email, &pw, &name, &facebookID, &token, &createdAt, &updatedAt)
 
 	return PlayerNew(ID, email, pw, name, facebookID, token, createdAt, updatedAt)
