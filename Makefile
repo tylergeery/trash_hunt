@@ -37,7 +37,7 @@ dev-run-db:
 dev-run-go:
 	$(eval $@_DB_HOST := $(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' $(container_postgres_dev)))
 	$(eval $@_REDIS_HOST := $(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' $(container_redis_dev)))
-	$(eval $@_API_ENV := -e DB_HOST=$($@_DB_HOST) -e DB_NAME=$(db_name_dev) -e DB_PASS=$(db_pass_dev) -e DB_USER=$(db_user_dev) -e DB_SSL_MODE=disable -e REDIS_HOST=$($@_REDIS_HOST))
+	$(eval $@_API_ENV := -e DB_HOST=$($@_DB_HOST) -e DB_NAME=$(db_name_dev) -e DB_PASS=$(db_pass_dev) -e DB_USER=$(db_user_dev) -e DB_SSL_MODE=disable -e REDIS_HOST=$($@_REDIS_HOST) -e REDIS_PORT=6379)
 	docker run -p 3001:8080 $($@_API_ENV) -v $(shell pwd)/src:/go/src/github.com/tylergeery/trash_hunt/src/ --name $(container_tcp_server_dev) -d $(image_tcp_server_dev)
 	docker run -p 3000:8080 $($@_API_ENV) -v $(shell pwd)/src:/go/src/github.com/tylergeery/trash_hunt/src/ --name $(container_api_server_dev) -d $(image_api_server_dev)
 
@@ -61,7 +61,7 @@ dev-pg: ## Exec into local pg instance
 test: ## Run tests with local docker env
 	$(eval $@_DB_HOST := $(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' $(container_postgres_dev)))
 	$(eval $@_REDIS_HOST := $(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' $(container_redis_dev)))
-	$(eval $@_API_ENV := -e DB_HOST=$($@_DB_HOST) -e DB_NAME=$(db_name_dev) -e DB_PASS=$(db_pass_dev) -e DB_USER=$(db_user_dev) -e DB_SSL_MODE=disable -e REDIS_HOST=$($@_REDIS_HOST))
+	$(eval $@_API_ENV := -e DB_HOST=$($@_DB_HOST) -e DB_NAME=$(db_name_dev) -e DB_PASS=$(db_pass_dev) -e DB_USER=$(db_user_dev) -e DB_SSL_MODE=disable -e REDIS_HOST=$($@_REDIS_HOST) -e REDIS_PORT=6379)
 	docker exec $($@_API_ENV) -it $(container_api_server_dev) /bin/bash -c "go test ../..."
 
 help:

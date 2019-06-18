@@ -46,12 +46,20 @@ func closeConnection() {
 	db.Close()
 }
 
+func getColumns(cols []string) string {
+	return strings.Join(cols, ",")
+}
+
 // Insert a new DB record
-func Insert(table string, insert map[string]interface{}, types map[string]string) (int64, error) {
+func Insert(table string, values []interface{}, columns []string) (int64, error) {
 	var insertID int64
 
-	values := getValues(insert, types)
-	query := fmt.Sprintf("INSERT INTO %s (%s, created_at, updated_at) VALUES (%s, NOW(), NOW()) RETURNING id", table, getColumns(insert), valuesStub(len(insert)))
+	query := fmt.Sprintf(
+		"INSERT INTO %s (%s, created_at, updated_at) VALUES (%s, NOW(), NOW()) RETURNING id",
+		table,
+		getColumns(columns),
+		valuesStub(len(values)),
+	)
 	row := db.QueryRow(query, values...)
 	err := row.Scan(&insertID)
 
@@ -59,9 +67,14 @@ func Insert(table string, insert map[string]interface{}, types map[string]string
 }
 
 // Update an existing DB record
-func Update(table string, update map[string]interface{}, types map[string]string, ID int64) error {
-	values := getValues(update, types)
-	query := fmt.Sprintf("UPDATE %s SET (%s, updated_at) = (%s, NOW()) WHERE id = %d", table, getColumns(update), valuesStub(len(update)), ID)
+func Update(table string, values []interface{}, columns []string, ID int64) error {
+	query := fmt.Sprintf(
+		"UPDATE %s SET (%s, updated_at) = (%s, NOW()) WHERE id = %d",
+		table,
+		getColumns(columns),
+		valuesStub(len(values)),
+		ID,
+	)
 	_, err := db.Exec(query, values...)
 
 	return err
@@ -83,36 +96,6 @@ func FetchRows(query string, args ...interface{}) (*sql.Rows, error) {
 // FetchRow returns a single record
 func FetchRow(query string, args ...interface{}) *sql.Row {
 	return db.QueryRow(query, args...)
-}
-
-func getColumns(m map[string]interface{}) string {
-	cols := make([]string, 0, len(m))
-
-	for k := range m {
-		cols = append(cols, k)
-	}
-
-	return strings.Join(cols, ",")
-}
-
-func getValues(values map[string]interface{}, types map[string]string) []interface{} {
-	vals := make([]interface{}, 0, len(values))
-
-	for k, v := range values {
-		if v == nil {
-			vals = append(vals, nil)
-			continue
-		}
-
-		switch types[k] {
-		case "int":
-			vals = append(vals, v.(int64))
-		default:
-			vals = append(vals, v.(string))
-		}
-	}
-
-	return vals
 }
 
 func valuesStub(count int) string {

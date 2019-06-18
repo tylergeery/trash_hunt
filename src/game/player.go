@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/goware/emailx"
@@ -26,14 +25,27 @@ type Player struct {
 	UpdatedAt  string `json:"updated_at"`
 }
 
-var types = map[string]string{
-	"id":          "int",
-	"email":       "string",
-	"name":        "string",
-	"facebook_id": "string",
-	"token":       "string",
-	"created_at":  "string",
-	"updated_at":  "string",
+var createColumns = []string{
+	"email",
+	"name",
+	"password",
+	"facebook_id",
+	"token",
+}
+var queryColumns = []string{
+	"id",
+	"email",
+	"name",
+	"facebook_id",
+	"token",
+	"created_at",
+	"updated_at",
+}
+var updateColumns = []string{
+	"email",
+	"name",
+	"facebook_id",
+	"token",
 }
 
 // PlayerNew - Constructor
@@ -57,13 +69,8 @@ func PlayerRegister(email, pw, name, facebookID string) (*Player, error) {
 		return nil, fmt.Errorf("Password must be at least %d characters", minPasswordLength)
 	}
 
-	// Validate email is unique
-	existing := PlayerGetByEmail(email)
-	if existing.ID != 0 {
-		return nil, fmt.Errorf("Email %s belongs to an existing user", email)
-	}
-
 	p := PlayerNew(0, email, pw, name, facebookID, "", "", "")
+
 	err := p.save()
 
 	return p, err
@@ -88,11 +95,17 @@ func (p *Player) save() error {
 		return err
 	}
 
+	// Validate email is unique
+	existing := PlayerGetByEmail(p.Email)
+	if existing.ID != 0 && existing.ID != p.ID {
+		return fmt.Errorf("Email %s belongs to an existing user", p.Email)
+	}
+
 	if p.ID == 0 {
-		id, err = storage.Insert(storage.TABLE_PLAYER, p.toCreateMap(), types)
+		id, err = storage.Insert(storage.TABLE_PLAYER, p.toCreateValues(), createColumns)
 		p.ID = id
 	} else {
-		err = storage.Update(storage.TABLE_PLAYER, p.toUpdateMap(), types, p.ID)
+		err = storage.Update(storage.TABLE_PLAYER, p.toUpdateValues(), updateColumns, p.ID)
 	}
 
 	return err
@@ -103,7 +116,7 @@ func PlayerGetByToken(authToken string) *Player {
 	var ID int64
 	var email, pw, name, facebookID, token, createdAt, updatedAt string
 
-	query := fmt.Sprintf("SELECT %s FROM %s WHERE token = $1", getColumns(types), storage.TABLE_PLAYER)
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE token = $1", queryColumns, storage.TABLE_PLAYER)
 
 	storage.FetchRow(query, authToken).Scan(&ID, &email, &pw, &name, &facebookID, &token, &createdAt, &updatedAt)
 
@@ -115,20 +128,11 @@ func PlayerGetByEmail(userEmail string) *Player {
 	var ID int64
 	var email, pw, name, facebookID, token, createdAt, updatedAt string
 
-	query := fmt.Sprintf("SELECT id, email, pw, name, facebook_id, token, created_at, updated_at FROM %s WHERE email=$1", storage.TABLE_PLAYER)
+	query := fmt.Sprintf("SELECT id, email, password, name, facebook_id, token, created_at, updated_at FROM %s WHERE email=$1", storage.TABLE_PLAYER)
 
-	fmt.Println(query)
 	storage.FetchRow(query, userEmail).Scan(&ID, &email, &pw, &name, &facebookID, &token, &createdAt, &updatedAt)
 
 	return PlayerNew(ID, email, pw, name, facebookID, token, createdAt, updatedAt)
-}
-
-func (p *Player) toSaveMap() map[string]interface{} {
-	return map[string]interface{}{
-		"name":        p.Name,
-		"email":       p.Email,
-		"facebook_id": p.FacebookID,
-	}
 }
 
 // ValidatePassword ensures that the provided password is correct for user
@@ -137,19 +141,12 @@ func (p *Player) ValidatePassword(pw string) bool {
 	return pw == p.pw
 }
 
-func (p *Player) toCreateMap() map[string]interface{} {
-	m := p.toSaveMap()
-
-	// TODO: handle password encryption
-	m["password"] = p.pw
-
-	return m
+func (p *Player) toCreateValues() []interface{} {
+	return []interface{}{p.Email, p.Name, p.pw, p.FacebookID, p.Token}
 }
 
-func (p *Player) toUpdateMap() map[string]interface{} {
-	m := p.toSaveMap()
-
-	return m
+func (p *Player) toUpdateValues() []interface{} {
+	return []interface{}{p.Email, p.Name, p.FacebookID, p.Token}
 }
 
 func (p *Player) validate() error {
@@ -165,16 +162,6 @@ func (p *Player) validate() error {
 
 	// return error
 	return err
-}
-
-func getColumns(m map[string]string) string {
-	cols := make([]string, 0, len(m))
-
-	for k := range m {
-		cols = append(cols, k)
-	}
-
-	return strings.Join(cols, ",")
 }
 
 // GetTestEmail returns a unique test email

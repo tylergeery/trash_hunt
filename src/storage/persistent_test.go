@@ -13,18 +13,14 @@ func TestInsertUpdateAndRemove(t *testing.T) {
 
 	table := "test"
 	query := "SELECT id, created_at, updated_at FROM test WHERE id = $1"
-	insert := map[string]interface{}{
-		"keyword": "Hello!",
-	}
-	types := map[string]string{
-		"keyword": "string",
-	}
+	insert := []interface{}{"Hello!"}
+	cols := []string{"keyword"}
 
 	defer func() {
 		closeConnection()
 	}()
 
-	id, err := Insert(table, insert, types)
+	id, err := Insert(table, insert, cols)
 
 	if err != nil {
 		t.Fatalf("Unexpected insert error: %s", err)
@@ -47,11 +43,9 @@ func TestInsertUpdateAndRemove(t *testing.T) {
 		t.Fatalf("Received invalid updated_at from fetch: %s", updatedAt)
 	}
 
-	update := map[string]interface{}{
-		"keyword": "Yup:::!",
-	}
+	update := []interface{}{"Yup:::!"}
 
-	err = Update(table, update, types, id)
+	err = Update(table, update, cols, id)
 
 	if err != nil {
 		t.Fatalf("Unexpected update error: %s", err)
