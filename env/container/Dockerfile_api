@@ -1,5 +1,0 @@
-FROM trash-hunt-image-go-dev:latest
-
-WORKDIR /go/src/github.com/tylergeery/trash_hunt/api_server
-
-RUN go get .
