@@ -8,6 +8,7 @@ import (
 
 	"github.com/goware/emailx"
 	"github.com/tylergeery/trash_hunt/src/storage"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const minPasswordLength = 8
@@ -69,11 +70,32 @@ func PlayerRegister(email, pw, name, facebookID string) (*Player, error) {
 		return nil, fmt.Errorf("Password must be at least %d characters", minPasswordLength)
 	}
 
-	p := PlayerNew(0, email, pw, name, facebookID, "", "", "")
+	password, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
 
-	err := p.save()
+	p := PlayerNew(0, email, string(password), name, facebookID, "", "", "")
+
+	err = p.save()
 
 	return p, err
+}
+
+// PlayerLogin authenticates the login credentials for a player
+func PlayerLogin(email, pw string) (*Player, error) {
+	p := PlayerGetByEmail(email)
+
+	if p.ID == 0 {
+		return nil, fmt.Errorf("Player not found: %s", email)
+	}
+
+	err := p.ValidatePassword(pw)
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
 }
 
 // Update - update an existing player
@@ -136,9 +158,8 @@ func PlayerGetByEmail(userEmail string) *Player {
 }
 
 // ValidatePassword ensures that the provided password is correct for user
-func (p *Player) ValidatePassword(pw string) bool {
-	// TODO: handle pw encryption
-	return pw == p.pw
+func (p *Player) ValidatePassword(pw string) error {
+	return bcrypt.CompareHashAndPassword([]byte(p.pw), []byte(pw))
 }
 
 func (p *Player) toCreateValues() []interface{} {

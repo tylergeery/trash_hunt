@@ -47,12 +47,25 @@ func PlayerLogin(c *routing.Context) error {
 		return err
 	}
 
-	// Find user by email and password
+	// TODO: check if user has been rate limited
+	p, err := game.PlayerLogin(req.Email, req.Pw)
+	if err != nil {
+		// TODO: add rate limiting for failures on email/ip
+		return routing.NewHTTPError(http.StatusBadRequest, "Invalid credentials")
+	}
 
-	// TODO: add rate limiting for failures on email/ip
+	token, err := auth.CreateToken(p)
+	if err != nil {
+		return routing.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 
 	// Return User w/ token
-	return nil
+	resp := responses.PlayerLoginResponse{
+		Player: p,
+		Token:  token,
+	}
+
+	return c.Write(resp)
 }
 
 // PlayerUpdate - Edit a player
@@ -67,5 +80,10 @@ func PlayerDelete(c *routing.Context) error {
 
 // PlayerQuery - Get information for a given player
 func PlayerQuery(c *routing.Context) error {
+	return nil
+}
+
+// PlayerResetPassword performs the password reset operation for a user
+func PlayerResetPassword(c *routing.Context) error {
 	return nil
 }

@@ -64,8 +64,8 @@ func TestPlayerRegisterSuccess(t *testing.T) {
 		if p.Email != test.player.Email {
 			t.Fatalf("Expected player email: %s, received: %s", p.Email, test.player.Email)
 		}
-		if p.pw != test.player.pw {
-			t.Fatalf("Expected player pw: %s, received: %s", p.pw, test.player.pw)
+		if p.pw == test.player.pw {
+			t.Fatalf("Expected hashed player pw for: %s, received: %s", test.player.pw, p.pw)
 		}
 		if p.Name != test.player.Name {
 			t.Fatalf("Expected player name: %s, received: %s", p.Name, test.player.Name)
@@ -79,6 +79,26 @@ func TestPlayerRegisterSuccess(t *testing.T) {
 		if playerByEmail.ID != p.ID {
 			t.Fatalf("PlayerByEmail does not have the correct ID: %d", playerByEmail.ID)
 		}
+	}
+}
+
+func TestPlayerLogin(t *testing.T) {
+	email := GetTestEmail("login")
+	password := "saklfsdlkfsa"
+	p, _ := PlayerRegister(email, password, "asdflksas TLkdlsff", "")
+
+	p1, err := PlayerLogin(email, password)
+	if err != nil {
+		t.Fatalf("Unexpected login err; %s", err)
+	}
+
+	if p1.ID != p.ID {
+		t.Fatalf("Unexpected user returned from login")
+	}
+
+	_, err = PlayerLogin(email, password+"ah")
+	if err == nil {
+		t.Fatalf("Did not received expected login error for user with bad pass")
 	}
 }
 
