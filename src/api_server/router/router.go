@@ -31,7 +31,7 @@ func GetRouter() *routing.Router {
 		controllers.PlayerLogin,
 	)
 	router.Post(
-		"/v1/player/create",
+		"/v1/player/",
 		middleware.LogRequest(),
 		content.TypeNegotiator(content.JSON),
 		cors.Handler(cors.Options{
@@ -54,9 +54,9 @@ func GetRouter() *routing.Router {
 		}),
 	)
 
-	rg.Post("/player/update", controllers.PlayerUpdate)
-	rg.Post("/player/delete", controllers.PlayerDelete)
-	rg.Get("/player/", controllers.PlayerQuery)
+	rg.Put("/player/", controllers.PlayerUpdate)
+	rg.Delete("/player/", controllers.PlayerDelete)
+	rg.Get(`/player/<id:\d+>`, controllers.PlayerQuery)
 
 	rg.Post("/game/start", controllers.GameStart)
 	rg.Get("/game/status", controllers.GameStatus)
