@@ -95,7 +95,12 @@ func PlayerUpdate(c *routing.Context) error {
 
 // PlayerDelete - Delete a player
 func PlayerDelete(c *routing.Context) error {
-	return nil
+	authID := c.Get("PlayerID").(int64)
+	player := game.PlayerGetByID(authID)
+	player.Status = game.PlayerStatusRemoved
+	c.Response.WriteHeader(http.StatusNoContent)
+
+	return player.Update()
 }
 
 // PlayerQuery - Get information for a given player

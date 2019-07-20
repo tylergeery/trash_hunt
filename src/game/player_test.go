@@ -50,7 +50,7 @@ func TestPlayerRegisterSuccess(t *testing.T) {
 	testCases := []TestCase{
 		TestCase{
 			args:   [4]string{testEmail, "asdffdssadf", "jk", ""},
-			player: PlayerNew(0, testEmail, "asdffdssadf", "jk", "", "", "", ""),
+			player: PlayerNew(0, testEmail, "asdffdssadf", "jk", "", "", PlayerStatusActive, "", ""),
 		},
 	}
 
@@ -73,9 +73,11 @@ func TestPlayerRegisterSuccess(t *testing.T) {
 		if p.FacebookID != test.player.FacebookID {
 			t.Fatalf("Expected player FacebookID: %s, received: %s", p.FacebookID, test.player.FacebookID)
 		}
+		if p.Status != test.player.Status {
+			t.Fatalf("Expected player status: %d, received: %d", p.Status, test.player.Status)
+		}
 
 		playerByEmail := PlayerGetByEmail(p.Email)
-		fmt.Println(playerByEmail)
 		if playerByEmail.ID != p.ID {
 			t.Fatalf("PlayerByEmail does not have the correct ID: %d", playerByEmail.ID)
 		}
@@ -103,7 +105,7 @@ func TestPlayerLogin(t *testing.T) {
 }
 
 func TestPlayerUpdateError(t *testing.T) {
-	p := PlayerNew(0, "test@test.com", "", "", "", "", "", "")
+	p := PlayerNew(0, "test@test.com", "", "", "", "", PlayerStatusActive, "", "")
 
 	p.Name = "Tester"
 	err := p.Update()
