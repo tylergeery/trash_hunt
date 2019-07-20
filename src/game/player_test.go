@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	_ "github.com/tylergeery/trash_hunt/src/test"
+	_ "github.com/tylergeery/trash_hunt/test"
 )
 
 func TestPlayerRegisterFailures(t *testing.T) {

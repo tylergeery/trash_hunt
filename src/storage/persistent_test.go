@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"testing"
 
-	_ "github.com/tylergeery/trash_hunt/src/test"
+	_ "github.com/tylergeery/trash_hunt/test"
 )
 
 func TestInsertUpdateAndRemove(t *testing.T) {

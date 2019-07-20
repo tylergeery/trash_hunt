@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/goware/emailx"
-	"github.com/tylergeery/trash_hunt/src/storage"
+	"github.com/tylergeery/trash_hunt/storage"
 	"golang.org/x/crypto/bcrypt"
 )
 

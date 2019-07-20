@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tylergeery/trash_hunt/src/auth"
-	"github.com/tylergeery/trash_hunt/src/game"
-	"github.com/tylergeery/trash_hunt/src/test"
+	"github.com/tylergeery/trash_hunt/auth"
+	"github.com/tylergeery/trash_hunt/game"
+	"github.com/tylergeery/trash_hunt/test"
 )
 
 // TestCreateWithInvalidKey
