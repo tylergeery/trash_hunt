@@ -4,13 +4,18 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/goware/emailx"
 	"github.com/tylergeery/trash_hunt/src/storage"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const minPasswordLength = 8
+
+const PlayerStatusActive = 1
+const PlayerStatusRemoved = 2
 
 // Player is a given player in the game
 type Player struct {
@@ -21,8 +26,15 @@ type Player struct {
 	FacebookID string `json:"facebook_id"`
 	Pos        Pos    `json:"pos"`
 	Token      string `json:"token"`
+	Status     int    `json:"status"`
 	CreatedAt  string `json:"created_at"`
 	UpdatedAt  string `json:"updated_at"`
+}
+
+// PlayerPublicProfile is a given player in the game
+type PlayerPublicProfile struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
 }
 
 var createColumns = []string{
@@ -31,6 +43,7 @@ var createColumns = []string{
 	"password",
 	"facebook_id",
 	"token",
+	"status",
 }
 var queryColumns = []string{
 	"id",
@@ -38,6 +51,7 @@ var queryColumns = []string{
 	"name",
 	"facebook_id",
 	"token",
+	"status",
 	"created_at",
 	"updated_at",
 }
@@ -46,10 +60,11 @@ var updateColumns = []string{
 	"name",
 	"facebook_id",
 	"token",
+	"status",
 }
 
 // PlayerNew - Constructor
-func PlayerNew(id int64, email, pw, name, facebookID, token, createdAt, updatedAt string) *Player {
+func PlayerNew(id int64, email, pw, name, facebookID, token string, status int, createdAt, updatedAt string) *Player {
 	return &Player{
 		ID:         id,
 		Email:      email,
@@ -57,6 +72,7 @@ func PlayerNew(id int64, email, pw, name, facebookID, token, createdAt, updatedA
 		Name:       name,
 		FacebookID: facebookID,
 		Token:      token,
+		Status:     status,
 		CreatedAt:  createdAt,
 		UpdatedAt:  updatedAt,
 	}
@@ -69,11 +85,32 @@ func PlayerRegister(email, pw, name, facebookID string) (*Player, error) {
 		return nil, fmt.Errorf("Password must be at least %d characters", minPasswordLength)
 	}
 
-	p := PlayerNew(0, email, pw, name, facebookID, "", "", "")
+	password, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
 
-	err := p.save()
+	p := PlayerNew(0, email, string(password), name, facebookID, "", PlayerStatusActive, "", "")
+
+	err = p.save()
 
 	return p, err
+}
+
+// PlayerLogin authenticates the login credentials for a player
+func PlayerLogin(email, pw string) (*Player, error) {
+	p := PlayerGetByEmail(email)
+
+	if p.ID == 0 {
+		return nil, fmt.Errorf("Player not found: %s", email)
+	}
+
+	err := p.ValidatePassword(pw)
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
 }
 
 // Update - update an existing player
@@ -111,42 +148,54 @@ func (p *Player) save() error {
 	return err
 }
 
+// PlayerGetByID retrieves player based on ID
+func PlayerGetByID(id int64) *Player {
+	query := fmt.Sprintf(
+		"SELECT %s FROM %s WHERE id = $1",
+		strings.Join(queryColumns, ","),
+		storage.TABLE_PLAYER,
+	)
+
+	return scanPlayer(storage.FetchRow(query, id), false)
+}
+
 // PlayerGetByToken retrieves player based on auth token
 func PlayerGetByToken(authToken string) *Player {
-	var ID int64
-	var email, pw, name, facebookID, token, createdAt, updatedAt string
+	query := fmt.Sprintf(
+		"SELECT %s FROM %s WHERE token = $1",
+		strings.Join(queryColumns, ","),
+		storage.TABLE_PLAYER,
+	)
 
-	query := fmt.Sprintf("SELECT %s FROM %s WHERE token = $1", queryColumns, storage.TABLE_PLAYER)
-
-	storage.FetchRow(query, authToken).Scan(&ID, &email, &pw, &name, &facebookID, &token, &createdAt, &updatedAt)
-
-	return PlayerNew(ID, email, pw, name, facebookID, token, createdAt, updatedAt)
+	return scanPlayer(storage.FetchRow(query, authToken), false)
 }
 
 // PlayerGetByEmail retrieves player based on email
 func PlayerGetByEmail(userEmail string) *Player {
-	var ID int64
-	var email, pw, name, facebookID, token, createdAt, updatedAt string
+	query := fmt.Sprintf("SELECT id, email, password, name, facebook_id, token, status, created_at, updated_at FROM %s WHERE email=$1", storage.TABLE_PLAYER)
 
-	query := fmt.Sprintf("SELECT id, email, password, name, facebook_id, token, created_at, updated_at FROM %s WHERE email=$1", storage.TABLE_PLAYER)
-
-	storage.FetchRow(query, userEmail).Scan(&ID, &email, &pw, &name, &facebookID, &token, &createdAt, &updatedAt)
-
-	return PlayerNew(ID, email, pw, name, facebookID, token, createdAt, updatedAt)
+	return scanPlayer(storage.FetchRow(query, userEmail), true)
 }
 
 // ValidatePassword ensures that the provided password is correct for user
-func (p *Player) ValidatePassword(pw string) bool {
-	// TODO: handle pw encryption
-	return pw == p.pw
+func (p *Player) ValidatePassword(pw string) error {
+	return bcrypt.CompareHashAndPassword([]byte(p.pw), []byte(pw))
+}
+
+// ToPublicProfile returns a public profile version of a User
+func (p *Player) ToPublicProfile() *PlayerPublicProfile {
+	return &PlayerPublicProfile{
+		ID:   p.ID,
+		Name: p.Name,
+	}
 }
 
 func (p *Player) toCreateValues() []interface{} {
-	return []interface{}{p.Email, p.Name, p.pw, p.FacebookID, p.Token}
+	return []interface{}{p.Email, p.Name, p.pw, p.FacebookID, p.Token, PlayerStatusActive}
 }
 
 func (p *Player) toUpdateValues() []interface{} {
-	return []interface{}{p.Email, p.Name, p.FacebookID, p.Token}
+	return []interface{}{p.Email, p.Name, p.FacebookID, p.Token, p.Status}
 }
 
 func (p *Player) validate() error {
@@ -176,4 +225,22 @@ func GetTestPlayer(ident string) *Player {
 	p, _ := PlayerRegister(GetTestEmail(ident), "saklfsdlkfsa", "asdflksas TLkdlsff", "")
 
 	return p
+}
+
+type playerScanner interface {
+	Scan(dest ...interface{}) error
+}
+
+func scanPlayer(scanner playerScanner, includePass bool) *Player {
+	var ID int64
+	var status int
+	var email, pw, name, facebookID, token, createdAt, updatedAt string
+
+	if includePass {
+		scanner.Scan(&ID, &email, &pw, &name, &facebookID, &token, &status, &createdAt, &updatedAt)
+	} else {
+		scanner.Scan(&ID, &email, &name, &facebookID, &token, &status, &createdAt, &updatedAt)
+	}
+
+	return PlayerNew(ID, email, pw, name, facebookID, token, status, createdAt, updatedAt)
 }

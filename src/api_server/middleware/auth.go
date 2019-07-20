@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/go-ozzo/ozzo-routing"
@@ -22,7 +23,7 @@ func validateToken(c *routing.Context) error {
 	playerID, err := auth.GetPlayerIDFromAccessToken(token)
 
 	if err != nil {
-		return err
+		return routing.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	c.Set("PlayerID", playerID)

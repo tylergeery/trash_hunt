@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/go-ozzo/ozzo-routing"
 	"github.com/tylergeery/trash_hunt/src/api_server/requests"
@@ -32,8 +33,9 @@ func PlayerCreate(c *routing.Context) error {
 	}
 
 	// return player to the client
-	resp := responses.PlayerCreateResponse{
-		Token: token,
+	resp := responses.PlayerLoginResponse{
+		Player: player,
+		Token:  token,
 	}
 
 	return c.Write(resp)
@@ -47,25 +49,80 @@ func PlayerLogin(c *routing.Context) error {
 		return err
 	}
 
-	// Find user by email and password
+	// TODO: check if user has been rate limited
+	p, err := game.PlayerLogin(req.Email, req.Pw)
+	if err != nil {
+		// TODO: add rate limiting for failures on email/ip
+		return routing.NewHTTPError(http.StatusBadRequest, "Invalid credentials")
+	}
 
-	// TODO: add rate limiting for failures on email/ip
+	token, err := auth.CreateToken(p)
+	if err != nil {
+		return routing.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 
 	// Return User w/ token
-	return nil
+	resp := responses.PlayerLoginResponse{
+		Player: p,
+		Token:  token,
+	}
+
+	return c.Write(resp)
 }
 
 // PlayerUpdate - Edit a player
 func PlayerUpdate(c *routing.Context) error {
-	return nil
+	var req requests.PlayerUpdateRequest
+	err := c.Read(&req)
+	if err != nil {
+		return err
+	}
+
+	authID := c.Get("PlayerID").(int64)
+	player := game.PlayerGetByID(authID)
+
+	player.Email = req.Email
+	player.Name = req.Name
+	player.FacebookID = req.FacebookID
+	err = player.Update()
+
+	if err != nil {
+		return err
+	}
+
+	return c.Write(game.PlayerGetByID(authID))
 }
 
 // PlayerDelete - Delete a player
 func PlayerDelete(c *routing.Context) error {
-	return nil
+	authID := c.Get("PlayerID").(int64)
+	player := game.PlayerGetByID(authID)
+	player.Status = game.PlayerStatusRemoved
+	c.Response.WriteHeader(http.StatusNoContent)
+
+	return player.Update()
 }
 
 // PlayerQuery - Get information for a given player
 func PlayerQuery(c *routing.Context) error {
+	id := c.Param("id")
+	playerID, err := strconv.Atoi(id)
+	if err != nil {
+		return err
+	}
+
+	player := game.PlayerGetByID(int64(playerID))
+	authID := c.Get("PlayerID").(int64)
+
+	if authID == int64(playerID) {
+		return c.Write(player)
+	}
+
+	return c.Write(player.ToPublicProfile())
+}
+
+// PlayerResetPassword performs the password reset operation for a user
+func PlayerResetPassword(c *routing.Context) error {
+	// TODO: need to set up email
 	return nil
 }

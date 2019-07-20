@@ -24,7 +24,7 @@ func (t TestWriter) Header() http.Header {
 func TestLogRequestAndValidateToken(t *testing.T) {
 	count := 0
 	foundPlayerID := int64(0)
-	player := game.PlayerNew(34, "", "", "", "", "", "", "")
+	player := game.PlayerNew(34, "", "", "", "", "", game.PlayerStatusActive, "", "")
 	handler := func(c *routing.Context) error {
 		count++
 		foundPlayerID = c.Get("PlayerID").(int64)

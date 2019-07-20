@@ -50,7 +50,7 @@ func TestPlayerRegisterSuccess(t *testing.T) {
 	testCases := []TestCase{
 		TestCase{
 			args:   [4]string{testEmail, "asdffdssadf", "jk", ""},
-			player: PlayerNew(0, testEmail, "asdffdssadf", "jk", "", "", "", ""),
+			player: PlayerNew(0, testEmail, "asdffdssadf", "jk", "", "", PlayerStatusActive, "", ""),
 		},
 	}
 
@@ -64,8 +64,8 @@ func TestPlayerRegisterSuccess(t *testing.T) {
 		if p.Email != test.player.Email {
 			t.Fatalf("Expected player email: %s, received: %s", p.Email, test.player.Email)
 		}
-		if p.pw != test.player.pw {
-			t.Fatalf("Expected player pw: %s, received: %s", p.pw, test.player.pw)
+		if p.pw == test.player.pw {
+			t.Fatalf("Expected hashed player pw for: %s, received: %s", test.player.pw, p.pw)
 		}
 		if p.Name != test.player.Name {
 			t.Fatalf("Expected player name: %s, received: %s", p.Name, test.player.Name)
@@ -73,17 +73,39 @@ func TestPlayerRegisterSuccess(t *testing.T) {
 		if p.FacebookID != test.player.FacebookID {
 			t.Fatalf("Expected player FacebookID: %s, received: %s", p.FacebookID, test.player.FacebookID)
 		}
+		if p.Status != test.player.Status {
+			t.Fatalf("Expected player status: %d, received: %d", p.Status, test.player.Status)
+		}
 
 		playerByEmail := PlayerGetByEmail(p.Email)
-		fmt.Println(playerByEmail)
 		if playerByEmail.ID != p.ID {
 			t.Fatalf("PlayerByEmail does not have the correct ID: %d", playerByEmail.ID)
 		}
 	}
 }
 
+func TestPlayerLogin(t *testing.T) {
+	email := GetTestEmail("login")
+	password := "saklfsdlkfsa"
+	p, _ := PlayerRegister(email, password, "asdflksas TLkdlsff", "")
+
+	p1, err := PlayerLogin(email, password)
+	if err != nil {
+		t.Fatalf("Unexpected login err; %s", err)
+	}
+
+	if p1.ID != p.ID {
+		t.Fatalf("Unexpected user returned from login")
+	}
+
+	_, err = PlayerLogin(email, password+"ah")
+	if err == nil {
+		t.Fatalf("Did not received expected login error for user with bad pass")
+	}
+}
+
 func TestPlayerUpdateError(t *testing.T) {
-	p := PlayerNew(0, "test@test.com", "", "", "", "", "", "")
+	p := PlayerNew(0, "test@test.com", "", "", "", "", PlayerStatusActive, "", "")
 
 	p.Name = "Tester"
 	err := p.Update()

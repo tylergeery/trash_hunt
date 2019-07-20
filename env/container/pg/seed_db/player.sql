@@ -5,10 +5,10 @@ CREATE TABLE player (
     name VARCHAR(100),
     facebook_id VARCHAR(50) DEFAULT NULL,
     token VARCHAR(200),
-    status VARCHAR(50) DEFAULT 'Active',
+    status smallint DEFAULT 1,
     created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'PST'),
     updated_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'PST')
 );
 
-INSERT INTO player (email, password, name)
-VALUES ('tyler+first@geerydev.com', 'test', 'Tyler Geery');
+INSERT INTO player (email, password, name, status)
+VALUES ('tyler+first@geerydev.com', 'test', 'Tyler Geery', 1);
