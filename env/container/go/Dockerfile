@@ -1,18 +1,19 @@
 FROM golang:1.12.7 as base
 
 ENV TOKEN_SIGNING_VALUE 'hello_world'
-ENV GOPATH '/go'
+ENV GOPATH '/go/path'
+ENV PATH="/go/path/bin:${PATH}"
 
-WORKDIR /go/code
+WORKDIR /go/src
 
-COPY ./code .
+COPY ./src .
 
 
 
 FROM base as api_server
 
-WORKDIR /go/code/api_server
-RUN go build -o trash_hunt_api_server
+WORKDIR /go/src/api_server
+RUN go build -o /go/bin/trash_hunt_api_server
 
 EXPOSE 8080
 
@@ -30,7 +31,7 @@ ENTRYPOINT CompileDaemon -log-prefix=false -build="go build -o /go/bin/trash_hun
 
 FROM base as tcp_server
 
-WORKDIR /go/code/tcp_server
+WORKDIR /go/src/tcp_server
 RUN go build -o /go/bin/trash_hunt_tcp_server
 
 EXPOSE 8080
