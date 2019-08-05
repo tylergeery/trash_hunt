@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/tylergeery/trash_hunt/src/game"
+	"github.com/tylergeery/trash_hunt/game"
 )
 
 const connectionCount = 10

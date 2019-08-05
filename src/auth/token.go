@@ -6,7 +6,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/tylergeery/trash_hunt/src/game"
+	"github.com/tylergeery/trash_hunt/game"
 )
 
 var signingKey []byte

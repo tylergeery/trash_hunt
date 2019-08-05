@@ -1,7 +1,7 @@
 package responses
 
 import (
-	"github.com/tylergeery/trash_hunt/src/game"
+	"github.com/tylergeery/trash_hunt/game"
 )
 
 // PlayerUpdateResponse - Response to PlayerUpdateRequest

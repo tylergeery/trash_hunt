@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/go-ozzo/ozzo-routing"
-	"github.com/tylergeery/trash_hunt/src/auth"
+	"github.com/tylergeery/trash_hunt/auth"
 )
 
 type key string

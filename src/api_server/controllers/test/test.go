@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/tylergeery/trash_hunt/src/api_server/router"
+	"github.com/tylergeery/trash_hunt/api_server/router"
 )
 
 // GetControllerResponse performs http request and returns recorded result

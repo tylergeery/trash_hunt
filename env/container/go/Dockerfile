@@ -1,39 +1,42 @@
-FROM golang:latest as base
+FROM golang:1.12.7 as base
 
 ENV TOKEN_SIGNING_VALUE 'hello_world'
-ENV GOPATH '/go'
+ENV GOPATH '/go/path'
+ENV PATH="/go/path/bin:${PATH}"
 
-RUN go get -u github.com/golang/dep/cmd/dep
-
-WORKDIR /go/src/github.com/tylergeery/trash_hunt/src
+WORKDIR /go/src
 
 COPY ./src .
 
-RUN dep ensure -vendor-only
 
 
+FROM base as api_server
 
-FROM base as http_server
-
-WORKDIR /go/src/github.com/tylergeery/trash_hunt/src/api_server
+WORKDIR /go/src/api_server
+RUN go build -o /go/bin/trash_hunt_api_server
 
 EXPOSE 8080
 
+ENTRYPOINT /go/bin/trash_hunt_api_server
 
 
-FROM http_server as http_server_dev
+
+FROM api_server as api_server_dev
 
 RUN go get -u github.com/githubnemo/CompileDaemon
 
-ENTRYPOINT CompileDaemon -log-prefix=false -build="go build -o /go/bin/http ." -command="/go/bin/http"
+ENTRYPOINT CompileDaemon -log-prefix=false -build="go build -o /go/bin/trash_hunt_api_server ." -command="/go/bin/trash_hunt_api_server"
 
 
 
 FROM base as tcp_server
 
-WORKDIR /go/src/github.com/tylergeery/trash_hunt/src/tcp_server
+WORKDIR /go/src/tcp_server
+RUN go build -o /go/bin/trash_hunt_tcp_server
 
 EXPOSE 8080
+
+ENTRYPOINT /go/bin/trash_hunt_tcp_server
 
 
 
@@ -41,4 +44,4 @@ FROM tcp_server as tcp_server_dev
 
 RUN go get -u github.com/githubnemo/CompileDaemon
 
-ENTRYPOINT CompileDaemon -log-prefix=false -build="go build -o /go/bin/tcp ." -command="/go/bin/tcp"
+ENTRYPOINT CompileDaemon -log-prefix=false -build="go build -o /go/bin/trash_hunt_tcp_server ." -command="/go/bin/trash_hunt_tcp_server"

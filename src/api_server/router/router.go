@@ -6,8 +6,8 @@ import (
 	"github.com/go-ozzo/ozzo-routing"
 	"github.com/go-ozzo/ozzo-routing/content"
 	"github.com/go-ozzo/ozzo-routing/cors"
-	"github.com/tylergeery/trash_hunt/src/api_server/controllers"
-	"github.com/tylergeery/trash_hunt/src/api_server/middleware"
+	"github.com/tylergeery/trash_hunt/api_server/controllers"
+	"github.com/tylergeery/trash_hunt/api_server/middleware"
 )
 
 func health(c *routing.Context) error {
