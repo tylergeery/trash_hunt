@@ -9,6 +9,3 @@ CREATE TABLE player (
     created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'PST'),
     updated_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'PST')
 );
-
-INSERT INTO player (email, password, name, status)
-VALUES ('tyler+first@geerydev.com', 'test', 'Tyler Geery', 1);

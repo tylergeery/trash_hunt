@@ -24,6 +24,7 @@ ENTRYPOINT /go/bin/trash_hunt_api_server
 FROM api_server as api_server_dev
 
 RUN go get -u github.com/githubnemo/CompileDaemon
+RUN cd / && go get -tags 'postgres' -u github.com/golang-migrate/migrate/cmd/migrate
 
 ENTRYPOINT CompileDaemon -log-prefix=false -build="go build -o /go/bin/trash_hunt_api_server ." -command="/go/bin/trash_hunt_api_server"
 
