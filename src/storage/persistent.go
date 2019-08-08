@@ -50,6 +50,11 @@ func getColumns(cols []string) string {
 	return strings.Join(cols, ",")
 }
 
+// Exec executes an aribitrary SQL command
+func Exec(command string) (sql.Result, error) {
+	return db.Exec(command)
+}
+
 // Insert a new DB record
 func Insert(table string, values []interface{}, columns []string) (int64, error) {
 	var insertID int64
