@@ -8,6 +8,3 @@ FROM base as dev
 
 ENV POSTGRES_USER 'dev'
 ENV POSTGRES_PASSWORD 'dev_secret'
-
-# Copies all seed files to image for initialization
-COPY ./env/container/pg/seed_db/* /docker-entrypoint-initdb.d/

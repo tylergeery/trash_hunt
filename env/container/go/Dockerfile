@@ -9,6 +9,14 @@ WORKDIR /go/src
 COPY ./src .
 
 
+FROM base as migrator
+
+WORKDIR /go/db
+
+RUN cd / && go get -tags 'postgres' -u github.com/golang-migrate/migrate/cmd/migrate
+COPY ./db .
+
+
 
 FROM base as api_server
 
