@@ -15,4 +15,6 @@ replace github.com/tylergeery/trash_hunt/game => ../game
 
 replace github.com/tylergeery/trash_hunt/storage => ../storage
 
+replace github.com/tylergeery/trash_hunt/tcp_server => ../tcp_server
+
 replace github.com/tylergeery/trash_hunt/test => ../test
