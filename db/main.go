@@ -45,7 +45,6 @@ func main() {
 			panic(err)
 		}
 
-		fmt.Printf("Executing: %s\n\n", contents)
 		_, err = db.Exec(string(contents))
 		if err != nil {
 			panic(err)

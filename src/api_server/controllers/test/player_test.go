@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tylergeery/trash_hunt/game"
+	"github.com/tylergeery/trash_hunt/model"
 	"github.com/tylergeery/trash_hunt/test"
 )
 
@@ -57,7 +57,7 @@ func TestAttemptCreatePlayerAndCannotReuseEmail(t *testing.T) {
 	player := map[string]string{
 		"name":  "Test Player",
 		"pw":    "1234213kdsl;kdg",
-		"email": game.GetTestEmail("email-reuse"),
+		"email": model.GetTestEmail("email-reuse"),
 	}
 	playerEncoded, _ := json.Marshal(player)
 	body := strings.NewReader(string(playerEncoded))
@@ -79,7 +79,7 @@ func TestCreateUpdateAndDeletePlayer(t *testing.T) {
 	player := map[string]string{
 		"name":  "Test Player",
 		"pw":    "1234213kdsl;kdg",
-		"email": game.GetTestEmail("email-reuse"),
+		"email": model.GetTestEmail("email-reuse"),
 	}
 	playerEncoded, _ := json.Marshal(player)
 	body := strings.NewReader(string(playerEncoded))
@@ -99,7 +99,7 @@ func TestCreateUpdateAndDeletePlayer(t *testing.T) {
 	resp = GetControllerResponse(t, "PUT", "/v1/player/", body, headers)
 	playerResponse, _ := ioutil.ReadAll(resp.Result().Body)
 
-	var updatedPlayer game.Player
+	var updatedPlayer model.Player
 	_ = json.Unmarshal(playerResponse, &updatedPlayer)
 
 	test.ExpectEqualInt64s(t, int64(http.StatusOK), int64(resp.Result().StatusCode))
@@ -121,7 +121,7 @@ func TestResetPassword(t *testing.T) {
 	player := map[string]string{
 		"name":  "Test Player",
 		"pw":    "1234213kdsl;kdg",
-		"email": game.GetTestEmail("email-reuse"),
+		"email": model.GetTestEmail("email-reuse"),
 	}
 	playerEncoded, _ := json.Marshal(player)
 	body := strings.NewReader(string(playerEncoded))

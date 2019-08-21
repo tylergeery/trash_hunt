@@ -8,7 +8,7 @@ import (
 	"github.com/tylergeery/trash_hunt/api_server/requests"
 	"github.com/tylergeery/trash_hunt/api_server/responses"
 	"github.com/tylergeery/trash_hunt/auth"
-	"github.com/tylergeery/trash_hunt/game"
+	"github.com/tylergeery/trash_hunt/model"
 )
 
 // PlayerCreate - Register/Signup a player
@@ -21,7 +21,7 @@ func PlayerCreate(c *routing.Context) error {
 	}
 
 	// insert new player into DB
-	player, err := game.PlayerRegister(req.Email, req.Pw, req.Name, req.FacebookID)
+	player, err := model.PlayerRegister(req.Email, req.Pw, req.Name, req.FacebookID)
 	if err != nil {
 		return routing.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -50,7 +50,7 @@ func PlayerLogin(c *routing.Context) error {
 	}
 
 	// TODO: check if user has been rate limited
-	p, err := game.PlayerLogin(req.Email, req.Pw)
+	p, err := model.PlayerLogin(req.Email, req.Pw)
 	if err != nil {
 		// TODO: add rate limiting for failures on email/ip
 		return routing.NewHTTPError(http.StatusBadRequest, "Invalid credentials")
@@ -79,7 +79,7 @@ func PlayerUpdate(c *routing.Context) error {
 	}
 
 	authID := c.Get("PlayerID").(int64)
-	player := game.PlayerGetByID(authID)
+	player := model.PlayerGetByID(authID)
 
 	player.Email = req.Email
 	player.Name = req.Name
@@ -90,14 +90,14 @@ func PlayerUpdate(c *routing.Context) error {
 		return err
 	}
 
-	return c.Write(game.PlayerGetByID(authID))
+	return c.Write(model.PlayerGetByID(authID))
 }
 
 // PlayerDelete - Delete a player
 func PlayerDelete(c *routing.Context) error {
 	authID := c.Get("PlayerID").(int64)
-	player := game.PlayerGetByID(authID)
-	player.Status = game.PlayerStatusRemoved
+	player := model.PlayerGetByID(authID)
+	player.Status = model.PlayerStatusRemoved
 	c.Response.WriteHeader(http.StatusNoContent)
 
 	return player.Update()
@@ -111,7 +111,7 @@ func PlayerQuery(c *routing.Context) error {
 		return err
 	}
 
-	player := game.PlayerGetByID(int64(playerID))
+	player := model.PlayerGetByID(int64(playerID))
 	authID := c.Get("PlayerID").(int64)
 
 	if authID == int64(playerID) {

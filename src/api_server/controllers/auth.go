@@ -7,7 +7,7 @@ import (
 	"github.com/tylergeery/trash_hunt/api_server/requests"
 	"github.com/tylergeery/trash_hunt/api_server/responses"
 	"github.com/tylergeery/trash_hunt/auth"
-	"github.com/tylergeery/trash_hunt/game"
+	"github.com/tylergeery/trash_hunt/model"
 )
 
 type key string
@@ -20,7 +20,7 @@ func CreateAuthToken(c *routing.Context) error {
 	}
 
 	// Look up player
-	player := game.PlayerGetByToken(req.Key)
+	player := model.PlayerGetByToken(req.Key)
 
 	// Create temp auth token
 	token, err := auth.CreateToken(player)

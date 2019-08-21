@@ -1,4 +1,4 @@
-module github.com/tylergeery/trash_hunt/game
+module github.com/tylergeery/trash_hunt/model
 
 go 1.12
 
