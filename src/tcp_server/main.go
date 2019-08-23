@@ -20,14 +20,13 @@ func main() {
 		panic(err)
 	}
 
-	// set up thread pool
-	events := make(chan net.Conn, connectionCount)
-	for i := 0; i < connectionCount; i++ {
-		go handleConnection(events)
-	}
-
 	// set up game manager
-	manager = connection.NewManager()
+	manager = connection.NewManager(connectionCount)
+
+	// set up thread pool
+	for i := 0; i < connectionCount; i++ {
+		go handleConnection(manager)
+	}
 
 	// accept connections
 	listener, err := net.ListenTCP("tcp", tcpAddr)
@@ -36,7 +35,7 @@ func main() {
 	}
 
 	// start manager routine for ng matching clients
-	go handleManager()
+	manager.Start()
 
 	// pass connections to pool
 	for {
@@ -45,31 +44,24 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Connection accept error: %s", err.Error())
 			continue
 		}
-		events <- conn
+		manager.InitCh <- conn
 	}
 }
 
-func handleManager() {
+func handleConnection(manager *connection.Manager) {
 	for {
-		manager.Match()
+		conn := <-manager.InitCh
 
-		time.Sleep(200 * time.Millisecond)
+		fmt.Printf("Got a connection: %s\n", conn)
+		handleClient(conn, manager)
 	}
 }
 
-func handleConnection(connections chan net.Conn) {
-	for {
-		conn := <-connections
-
-		fmt.Println("Got a connection")
-		handleClient(conn)
-	}
-}
-
-func handleClient(conn net.Conn) {
+func handleClient(conn net.Conn, manager *connection.Manager) {
 	conn.SetReadDeadline(time.Now().Add(10 * time.Minute)) // TODO: game duration
 	defer conn.Close()
 
+	// Try to turn connection into game player
 	client := connection.NewClient(conn)
 	err := client.ValidateUser()
 	if err != nil {
@@ -77,9 +69,12 @@ func handleClient(conn net.Conn) {
 		return
 	}
 
-	// TODO: this should be an event to manager
-	manager.AddPending(client)
+	// Make sure we let the manager know the client is gone
+	defer func() {
+		manager.ExitCh <- client
+	}()
 
-	// TODO: let player know when arena is set
+	// Client will wait for manager to start a match
+	manager.PendingCh <- client
 	client.WaitForStart()
 }

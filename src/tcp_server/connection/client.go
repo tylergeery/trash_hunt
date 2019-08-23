@@ -11,8 +11,9 @@ import (
 
 // Client holds the client player information
 type Client struct {
-	conn   net.Conn
-	player *game.Player
+	conn    net.Conn
+	matchID int64
+	player  *game.Player
 }
 
 // NewClient returns a new active client
