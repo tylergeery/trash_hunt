@@ -1,6 +1,9 @@
 package connection
 
-import "net"
+import (
+	"fmt"
+	"net"
+)
 
 // Manager handles the creation of matches (updating movements)
 type Manager struct {
@@ -37,8 +40,10 @@ func (m *Manager) waitForEvents() {
 		select {
 		case client := <-m.PendingCh:
 			m.addPending(client)
+			fmt.Printf("Manager: adding client %s", client)
 		case client := <-m.PendingCh:
 			m.removePending(client)
+			fmt.Printf("Manager: removing client: %s", client)
 			m.endMatch(client.matchID) // TODO: decide who lost
 		case _ = <-m.ActiveCh:
 			// TODO: Update arena with move
