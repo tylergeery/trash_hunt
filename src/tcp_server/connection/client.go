@@ -1,6 +1,7 @@
 package connection
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"strings"
@@ -28,19 +29,16 @@ func NewClient(conn net.Conn) *Client {
 // ValidateUser ensures that we have a valid user player
 func (c *Client) ValidateUser() error {
 	msg := make([]byte, 250)
-	err := c.gatherInput(msg)
+	userToken, err := c.gatherInput(msg)
 	if err != nil {
 		fmt.Printf("Client: error getting user token: %s\n", err)
 		return err
 	}
 
-	userToken := strings.TrimRight(string(msg), " \n\t")
-	playerID, err := auth.GetPlayerIDFromAccessToken(userToken)
-	fmt.Printf("Client: token %s after\n", userToken)
-	fmt.Printf("Client: token %s\n", msg[:42])
-	fmt.Printf("Client: token %s\n", msg[42:])
+	playerID, err := auth.GetPlayerIDFromAccessToken(strings.TrimRight(userToken, " \n\t"))
+	fmt.Printf("Client: token %s\n", userToken)
 	if err != nil {
-		fmt.Printf("Client: could not validatse token, received err: %s\n", err)
+		fmt.Printf("Client: could not validate token, received err: %s\n", err)
 		return err
 	}
 
@@ -59,8 +57,8 @@ func (c *Client) ValidateUser() error {
 
 // GetMove collects a move from the client
 func (c *Client) GetMove() (string, error) {
-	move := make([]byte, 2)
-	err := c.gatherInput(move)
+	msg := make([]byte, 2)
+	move, err := c.gatherInput(msg)
 
 	if err != nil {
 		return "", err
@@ -69,21 +67,28 @@ func (c *Client) GetMove() (string, error) {
 	return string(move), nil
 }
 
-func (c *Client) gatherInput(input []byte) error {
-	_, err := c.conn.Read(input)
+func (c *Client) gatherInput(input []byte) (s string, err error) {
+	_, err = c.conn.Read(input)
 
 	if err != nil {
-		return err
+		return
 	}
 
-	return nil
+	s = string(bytes.TrimRight(input, "\x00"))
+
+	return
 }
 
 // Respond sends output to the client
 func (c *Client) processGame() {
 	for {
 		fmt.Println("Client: processing game...")
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
+		_, err := c.gatherInput(make([]byte, 100))
+		if err != nil {
+			fmt.Printf("Client: ending game, %s", err)
+			return
+		}
 	}
 }
 
@@ -102,7 +107,7 @@ func (c *Client) WaitForStart() {
 	fmt.Println("Client: waiting for start")
 
 	// TODO: Listen for Manager to say game begins
-	err := c.respond("starting")
+	err := c.respond("Status: Pending")
 	if err != nil {
 		return
 	}

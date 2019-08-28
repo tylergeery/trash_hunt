@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 func main() {
-	fmt.Println("Starting game against computer")
+	fmt.Println("Starting game against computer.")
 
 	// Open two connections
 
