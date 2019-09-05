@@ -11,10 +11,26 @@ import (
 	"github.com/tylergeery/trash_hunt/tcp_server/game"
 )
 
+// Move is a move that a client wants to make
+type Move struct {
+	pos      game.Pos
+	matchID  int64
+	playerID int64
+}
+
+func NewMove(pos game.Pos, matchID, playerID int64) Move {
+	return Move{
+		pos:      pos,
+		matchID:  matchID,
+		playerID: playerID,
+	}
+}
+
 // Client holds the client player information
 type Client struct {
 	conn          *net.TCPConn
 	matchID       int64
+	moveChan      chan Move
 	notifications chan int
 	player        *game.Player
 }
@@ -23,7 +39,7 @@ type Client struct {
 func NewClient(conn *net.TCPConn) *Client {
 	return &Client{
 		conn:          conn,
-		notifications: make(chan int, 10),
+		notifications: make(chan int, 5),
 	}
 }
 
@@ -83,10 +99,17 @@ func (c *Client) gatherInput(input []byte) (s string, err error) {
 func (c *Client) processGame() {
 	for {
 		fmt.Println("Client: processing game...")
-		_, err := c.gatherInput(make([]byte, 100))
+		move, err := c.gatherInput(make([]byte, 5))
 		if err != nil {
 			fmt.Printf("Client: ending game, %s\n", err)
 			return
+		}
+
+		switch move {
+		case "l":
+			pos := game.Pos{X: c.player.Pos.X - 1, Y: c.player.Pos.Y}
+			move := NewMove(pos, c.matchID, c.player.ID)
+			c.moveChan <- move
 		}
 	}
 }

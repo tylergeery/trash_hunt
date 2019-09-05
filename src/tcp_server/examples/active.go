@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/tylergeery/trash_hunt/auth"
 	"github.com/tylergeery/trash_hunt/model"
 	"github.com/tylergeery/trash_hunt/tcp_server/connection"
+	"github.com/tylergeery/trash_hunt/tcp_server/game"
 )
 
 func setupPlayer(player *model.Player) net.Conn {
@@ -69,17 +71,33 @@ func main() {
 	defer player2Conn.Close()
 
 	// Wait for game to match
-	game1 := connection.ReadStringFromConn(player1Conn, make([]byte, 50))
-	game2 := connection.ReadStringFromConn(player2Conn, make([]byte, 50))
+	game1 := connection.ReadStringFromConn(player1Conn, make([]byte, 1500))
+	game2 := connection.ReadStringFromConn(player2Conn, make([]byte, 1500))
+	var state1 game.State
+	json.Unmarshal([]byte(game1), &state1)
 	if game1 != game2 {
 		panic(fmt.Sprintf("Players were not paired for the same game: Player1 %s, Player2 %s", game1, game2))
 	}
 
 	// Move one character and ensure the other receives the move
-	fmt.Println(game1, game2)
+	_, err := player1Conn.Write([]byte{'l'})
+	if err != nil {
+		panic(fmt.Sprintf("Error sending left move: %s", err))
+	}
+	game1 = connection.ReadStringFromConn(player1Conn, make([]byte, 1500))
+	game2 = connection.ReadStringFromConn(player2Conn, make([]byte, 1500))
+	var state2 game.State
+	json.Unmarshal([]byte(game1), &state2)
+	if game1 != game2 {
+		panic(fmt.Sprintf("Players were not paired for the same game: Player1 %s, Player2 %s", game1, game2))
+	}
+	fmt.Println(state1, state2)
+	if (state2.Player1.Pos.X + 1) != state1.Player1.Pos.X {
+		panic(fmt.Sprintf("Player1 was expected to move left from pos (%s) to pos (%s)", state1.Player1.Pos, state2.Player1.Pos))
+	}
 
 	// Move them both and ensure each receives the other
 
 	// Try to win?
-
+	fmt.Println("Game over")
 }

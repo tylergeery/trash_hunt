@@ -134,6 +134,19 @@ func (s *State) getAvailableMoves(player *Player, visited []Pos) []Pos {
 	return positions
 }
 
+// TODO: test
+// MoveUser changes the current position of a user to the nextPos
+func (s *State) MoveUser(playerID int64, nextPos Pos) {
+	player := s.Player1
+	if playerID == s.Player2.ID {
+		player = s.Player2
+	}
+
+	if s.Maze.CanMoveBetween(player.Pos, nextPos) {
+		player.Pos = nextPos
+	}
+}
+
 func hasVisited(pos Pos, visited []Pos) bool {
 	for _, v := range visited {
 		if v.X == pos.X && v.Y == pos.Y {

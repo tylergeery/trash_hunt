@@ -9,7 +9,7 @@ import (
 
 // Manager handles the creation of matches (updating movements)
 type Manager struct {
-	ActiveCh  chan *Arena
+	ActiveCh  chan Move
 	ExitCh    chan *Client
 	InitCh    chan *net.TCPConn
 	PendingCh chan *Client
@@ -20,7 +20,7 @@ type Manager struct {
 // NewManager returns a new connection manager object
 func NewManager(clients int) *Manager {
 	return &Manager{
-		ActiveCh:  make(chan *Arena, clients),
+		ActiveCh:  make(chan Move, clients),
 		ExitCh:    make(chan *Client, clients),
 		InitCh:    make(chan *net.TCPConn, clients),
 		PendingCh: make(chan *Client, clients),
@@ -38,16 +38,21 @@ func (m *Manager) waitForEvents() {
 	for {
 		select {
 		case client := <-m.PendingCh:
-			m.addPending(client)
 			fmt.Printf("Manager: adding client %s\n", client)
-			m.match()
+			m.addPending(client).match()
 		case client := <-m.ExitCh:
-			m.removePending(client)
 			fmt.Printf("Manager: removing client: %s\n", client)
-			m.endMatch(client.matchID) // TODO: move this as activeCh move
-		case _ar := <-m.ActiveCh:
-			// TODO: Update arena with move
-			fmt.Printf("Manager: got move from client: %s\n", _ar)
+			m.removePending(client).endMatch(client.matchID)
+		case move := <-m.ActiveCh:
+			fmt.Printf("Manager: got move from client: %s\n", move)
+			arena, ok := m.active[move.matchID]
+			if !ok {
+				fmt.Printf("Manager: got move for unknown game (%d)", move.matchID)
+				continue
+			}
+
+			arena.state.MoveUser(move.playerID, move.pos)
+			arena.sendMessages()
 		}
 	}
 }
@@ -96,7 +101,7 @@ func (m *Manager) match() *Manager {
 
 		fmt.Printf("Manager: created game (%s)\n", game.ID)
 
-		arena.notifyClients(1)
+		arena.start(game.ID, m.ActiveCh)
 
 		fmt.Printf("Manager: done notifying clients\n")
 
