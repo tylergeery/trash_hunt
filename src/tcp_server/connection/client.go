@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"strings"
-	"time"
 
 	"github.com/tylergeery/trash_hunt/auth"
 	"github.com/tylergeery/trash_hunt/model"
@@ -14,15 +13,17 @@ import (
 
 // Client holds the client player information
 type Client struct {
-	conn    net.Conn
-	matchID int64
-	player  *game.Player
+	conn          *net.TCPConn
+	matchID       int64
+	notifications chan int
+	player        *game.Player
 }
 
 // NewClient returns a new active client
-func NewClient(conn net.Conn) *Client {
+func NewClient(conn *net.TCPConn) *Client {
 	return &Client{
-		conn: conn,
+		conn:          conn,
+		notifications: make(chan int, 10),
 	}
 }
 
@@ -69,7 +70,6 @@ func (c *Client) GetMove() (string, error) {
 
 func (c *Client) gatherInput(input []byte) (s string, err error) {
 	_, err = c.conn.Read(input)
-
 	if err != nil {
 		return
 	}
@@ -83,10 +83,9 @@ func (c *Client) gatherInput(input []byte) (s string, err error) {
 func (c *Client) processGame() {
 	for {
 		fmt.Println("Client: processing game...")
-		time.Sleep(100 * time.Millisecond)
 		_, err := c.gatherInput(make([]byte, 100))
 		if err != nil {
-			fmt.Printf("Client: ending game, %s", err)
+			fmt.Printf("Client: ending game, %s\n", err)
 			return
 		}
 	}
@@ -106,11 +105,19 @@ func (c *Client) respond(message string) error {
 func (c *Client) WaitForStart() {
 	fmt.Println("Client: waiting for start")
 
-	// TODO: Listen for Manager to say game begins
 	err := c.respond("Status: Pending")
 	if err != nil {
 		return
 	}
 
-	c.processGame()
+	select {
+	case move := <-c.notifications:
+		if move == 1 {
+			// game start move
+			c.processGame()
+
+			return
+		}
+		fmt.Printf("Client: Received move before game started (%s)", move)
+	}
 }

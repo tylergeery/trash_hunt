@@ -12,12 +12,14 @@ type Arena struct {
 
 // NewArena sets up all the infrastructure for gameplay
 func NewArena(c1, c2 *Client) *Arena {
-    // Set up channels to communicate to both clients
-
-    // Set up channels to receive events from both clients
-
     return &Arena{
         state: game.NewState(c1.player, c2.player),
         clients: []*Client{c1, c2},
+    }
+}
+
+func (a *Arena) notifyClients(move int) {
+    for i := range a.clients {
+        a.clients[i].notifications <- move
     }
 }

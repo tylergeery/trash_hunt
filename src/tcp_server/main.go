@@ -35,11 +35,13 @@ func main() {
 	}
 
 	// start manager routine for ng matching clients
-	manager.Start()
+	go manager.Start()
+
+	// TODO: make sure the manager will clean up lingering goroutines
 
 	// pass connections to pool
 	for {
-		conn, err := listener.Accept()
+		conn, err := listener.AcceptTCP()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Connection accept error: %s", err.Error())
 			continue
@@ -57,8 +59,9 @@ func handleConnection(manager *connection.Manager) {
 	}
 }
 
-func handleClient(conn net.Conn, manager *connection.Manager) {
+func handleClient(conn *net.TCPConn, manager *connection.Manager) {
 	conn.SetReadDeadline(time.Now().Add(10 * time.Minute)) // TODO: game duration
+	conn.SetKeepAlive(true)
 	defer conn.Close()
 
 	// Try to turn connection into game player

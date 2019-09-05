@@ -9,6 +9,7 @@ import (
 
 	"github.com/tylergeery/trash_hunt/auth"
 	"github.com/tylergeery/trash_hunt/model"
+	"github.com/tylergeery/trash_hunt/tcp_server/connection"
 )
 
 func setupPlayer(player *model.Player) net.Conn {
@@ -25,8 +26,7 @@ func setupPlayer(player *model.Player) net.Conn {
 	}
 
 	// setting connection settings
-	conn.SetReadDeadline(time.Now().Add(10 * time.Minute)) // TODO: game duration
-	defer conn.Close()
+	conn.SetReadDeadline(time.Now().Add(5 * time.Second)) // TODO: game duration
 
 	// authenticate
 	fmt.Printf("Sending player token: %s\n", playerToken)
@@ -47,6 +47,7 @@ func setupPlayer(player *model.Player) net.Conn {
 		panic(fmt.Sprintf("Received something other than status pending: \n%s\n%s", string(message), strings.TrimPrefix(string(message), "Status: ")))
 	}
 
+	fmt.Printf("Player established: %s\n", playerToken)
 	return conn
 }
 
@@ -64,19 +65,18 @@ func main() {
 	// Setup two players
 	player1Conn := setupPlayer(player1)
 	player2Conn := setupPlayer(player2)
+	defer player1Conn.Close()
+	defer player2Conn.Close()
 
 	// Wait for game to match
-	player1Response := make([]byte, 50)
-	player2Response := make([]byte, 50)
-	player2Conn.Read(player2Response)
-	player1Conn.Read(player1Response)
-	game1 := string(bytes.TrimRight(player1Response, "\x00"))
-	game2 := string(bytes.TrimRight(player2Response, "\x00"))
+	game1 := connection.ReadStringFromConn(player1Conn, make([]byte, 50))
+	game2 := connection.ReadStringFromConn(player2Conn, make([]byte, 50))
 	if game1 != game2 {
 		panic(fmt.Sprintf("Players were not paired for the same game: Player1 %s, Player2 %s", game1, game2))
 	}
 
 	// Move one character and ensure the other receives the move
+	fmt.Println(game1, game2)
 
 	// Move them both and ensure each receives the other
 
