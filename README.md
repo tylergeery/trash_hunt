@@ -3,15 +3,15 @@ Multiplayer maze racing game. You're a raccoon and you're hungry. Find the trash
 
 ## Architecture
 ### HTTP Server
-A simple Go HTTP server will exist for game CRUD operations around setup, results, players etc...
-See the api_server directory for more information.
+A simple Go HTTP server handles game CRUD operations around setup, results, players etc...
+See the [api_server directory](./src/api_server) for more information.
 
 ### TCP Server
-A Go TCP Server will handle socket connections between clients for actual game play. This will handle move validation and sending movement events to each of the active clients.
-See the tcp_server directory for more information.
+A Go TCP Server handles TCP connections between clients for actual game play. This handles move validation and sending movement events to each of the active clients.
+See the [tcp_server directory](./src/tcp_server) for more information.
 
 ### Storage
-The storage directory handles some wrapper operations around databases that will be used by the various servers.
+The storage directory handles some wrapper operations around databases that are used by the various servers.
 
 ## Setup
 ### Set up docker env
