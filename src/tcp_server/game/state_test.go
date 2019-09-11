@@ -13,11 +13,13 @@ func TestNewState(t *testing.T) {
 		t.Fatalf("Trash Pos still at (0,0)")
 	}
 
-	if state.Player1.Pos.X == 0 && state.Player1.Pos.Y == 0 {
+	player1, _ := state.Players[p1.ID]
+	player2, _ := state.Players[p2.ID]
+	if player1.Pos.X == 0 && player1.Pos.Y == 0 {
 		t.Fatalf("Player1 Pos still at (0,0)")
 	}
 
-	if state.Player2.Pos.X == 0 && state.Player2.Pos.Y == 0 {
+	if player2.Pos.X == 0 && player2.Pos.Y == 0 {
 		t.Fatalf("Player2 Pos still at (0,0)")
 	}
 }
@@ -41,10 +43,10 @@ func TestPlayerCanFinish(t *testing.T) {
 	p1 := NewPlayer(2)
 	p2 := NewPlayer(10)
 	state := NewState(p1, p2)
-	state.Player1.Pos.X = state.Maze.TrashPos.X
-	state.Player1.Pos.Y = state.Maze.TrashPos.Y
-	state.Player2.Pos.X = state.Maze.TrashPos.X
-	state.Player2.Pos.Y = state.Maze.TrashPos.Y - 1
+	p1.Pos.X = state.Maze.TrashPos.X
+	p1.Pos.Y = state.Maze.TrashPos.Y
+	p2.Pos.X = state.Maze.TrashPos.X
+	p2.Pos.Y = state.Maze.TrashPos.Y - 1
 	outcomes := map[string]bool{}
 	visited := []Pos{}
 

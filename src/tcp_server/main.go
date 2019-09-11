@@ -54,7 +54,7 @@ func handleConnection(manager *connection.Manager) {
 	for {
 		conn := <-manager.InitCh
 
-		fmt.Printf("Got a connection: %s\n", conn)
+		fmt.Printf("Got a connection\n")
 		handleClient(conn, manager)
 	}
 }

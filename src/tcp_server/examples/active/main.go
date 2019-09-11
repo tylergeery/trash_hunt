@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -28,7 +27,7 @@ func setupPlayer(player *model.Player) net.Conn {
 	}
 
 	// setting connection settings
-	conn.SetReadDeadline(time.Now().Add(5 * time.Second)) // TODO: game duration
+	conn.SetReadDeadline(time.Now().Add(10 * time.Second)) // TODO: game duration
 
 	// authenticate
 	fmt.Printf("Sending player token: %s\n", playerToken)
@@ -38,14 +37,9 @@ func setupPlayer(player *model.Player) net.Conn {
 	}
 
 	// listen for reply
-	message := make([]byte, 50)
-	_, err = conn.Read(message)
-	if err != nil {
-		panic(fmt.Sprintf("Received error waiting for pending status: %s", err))
-	}
-	message = bytes.TrimRight(message, "\x00")
+	message := connection.ReadStringFromConn(conn, make([]byte, 50))
 
-	if strings.TrimPrefix(string(message), "Status: ") != "Pending" {
+	if strings.TrimPrefix(message, "Status: ") != "Pending" {
 		panic(fmt.Sprintf("Received something other than status pending: \n%s\n%s", string(message), strings.TrimPrefix(string(message), "Status: ")))
 	}
 
@@ -74,26 +68,52 @@ func main() {
 	game1 := connection.ReadStringFromConn(player1Conn, make([]byte, 1500))
 	game2 := connection.ReadStringFromConn(player2Conn, make([]byte, 1500))
 	var state1 game.State
+	fmt.Println(game1)
 	json.Unmarshal([]byte(game1), &state1)
 	if game1 != game2 {
 		panic(fmt.Sprintf("Players were not paired for the same game: Player1 %s, Player2 %s", game1, game2))
 	}
 
 	// Move one character and ensure the other receives the move
-	_, err := player1Conn.Write([]byte{'l'})
+	move := 'l'
+	state1Player1 := state1.Players[player1.ID]
+	fmt.Println(state1.Players)
+	if state1Player1.Pos.X == 0 {
+		move = 'r'
+	}
+	_, err := player1Conn.Write([]byte{byte(move)})
 	if err != nil {
 		panic(fmt.Sprintf("Error sending left move: %s", err))
 	}
-	game1 = connection.ReadStringFromConn(player1Conn, make([]byte, 1500))
-	game2 = connection.ReadStringFromConn(player2Conn, make([]byte, 1500))
-	var state2 game.State
-	json.Unmarshal([]byte(game1), &state2)
-	if game1 != game2 {
-		panic(fmt.Sprintf("Players were not paired for the same game: Player1 %s, Player2 %s", game1, game2))
+	positions1 := connection.ReadStringFromConn(player1Conn, make([]byte, 100))
+	positions2 := connection.ReadStringFromConn(player2Conn, make([]byte, 100))
+	state2 := game.State{
+		Players: make(map[int64]*game.Player),
 	}
-	fmt.Println(state1, state2)
-	if (state2.Player1.Pos.X + 1) != state1.Player1.Pos.X {
-		panic(fmt.Sprintf("Player1 was expected to move left from pos (%s) to pos (%s)", state1.Player1.Pos, state2.Player1.Pos))
+	fmt.Println(positions1)
+	json.Unmarshal([]byte(positions1), &state2.Players)
+	if positions1 != positions2 {
+		panic(
+			fmt.Sprintf(
+				"Players were not paired for the same game: Player1 %s, Player2 %s",
+				game1, game2,
+			),
+		)
+	}
+
+	pos := state2.Players[player1.ID].Pos.X + 1
+	if move == 'r' {
+		pos = state2.Players[player1.ID].Pos.X - 1
+	}
+	if pos != state1.Players[player1.ID].Pos.X {
+		panic(
+			fmt.Sprintf(
+				"Player1 was expected to move (%s) from pos (%d, %d) to pos (%d, %d)",
+				string(move),
+				state1.Players[player1.ID].Pos.X, state1.Players[player1.ID].Pos.Y,
+				state2.Players[player1.ID].Pos.X, state2.Players[player1.ID].Pos.Y,
+			),
+		)
 	}
 
 	// Move them both and ensure each receives the other

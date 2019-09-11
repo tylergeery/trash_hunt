@@ -2,6 +2,7 @@ package connection
 
 import (
 	"encoding/json"
+    "fmt"
 
 	"github.com/tylergeery/trash_hunt/tcp_server/game"
 )
@@ -28,7 +29,7 @@ func (a *Arena) start(matchID int64, moveChan chan Move) {
 	}
 
 	a.notifyClients(1)
-	a.sendMessages()
+	a.sendInitialState()
 }
 
 func (a *Arena) notifyClients(move int) {
@@ -37,11 +38,21 @@ func (a *Arena) notifyClients(move int) {
 	}
 }
 
-func (a *Arena) sendMessages() {
+func (a *Arena) sendInitialState() {
 	message, _ := json.Marshal(a.state)
 	gameState := string(message)
 
 	for i := range a.clients {
 		a.clients[i].respond(gameState)
+	}
+}
+
+func (a *Arena) sendPositions() {
+	message, _ := json.Marshal(a.state.Players)
+    fmt.Printf("Arena: sending positions: %s", message)
+	positions := string(message)
+
+	for i := range a.clients {
+		a.clients[i].respond(positions)
 	}
 }

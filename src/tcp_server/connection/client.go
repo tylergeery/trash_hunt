@@ -66,7 +66,7 @@ func (c *Client) ValidateUser() error {
 		return fmt.Errorf("User with id (%d) could not be found", playerID)
 	}
 
-	fmt.Println("Client: Got player %s", player)
+	fmt.Printf("Client: Got player (%d)\n", player.ID)
 	c.player = game.NewPlayer(playerID)
 
 	return nil
@@ -110,6 +110,10 @@ func (c *Client) processGame() {
 			pos := game.Pos{X: c.player.Pos.X - 1, Y: c.player.Pos.Y}
 			move := NewMove(pos, c.matchID, c.player.ID)
 			c.moveChan <- move
+		case "r":
+			pos := game.Pos{X: c.player.Pos.X + 1, Y: c.player.Pos.Y}
+			move := NewMove(pos, c.matchID, c.player.ID)
+			c.moveChan <- move
 		}
 	}
 }
@@ -141,6 +145,6 @@ func (c *Client) WaitForStart() {
 
 			return
 		}
-		fmt.Printf("Client: Received move before game started (%s)", move)
+		fmt.Printf("Client: Received move before game started (%s)", string(move))
 	}
 }

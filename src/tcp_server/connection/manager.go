@@ -38,13 +38,13 @@ func (m *Manager) waitForEvents() {
 	for {
 		select {
 		case client := <-m.PendingCh:
-			fmt.Printf("Manager: adding client %s\n", client)
+			fmt.Printf("Manager: adding client: (%d)\n", client.player.ID)
 			m.addPending(client).match()
 		case client := <-m.ExitCh:
-			fmt.Printf("Manager: removing client: %s\n", client)
+			fmt.Printf("Manager: removing client:(%d)\n", client.player.ID)
 			m.removePending(client).endMatch(client.matchID)
 		case move := <-m.ActiveCh:
-			fmt.Printf("Manager: got move from client: %s\n", move)
+			fmt.Printf("Manager: got move from client: (%d) (%d, %d)\n", move.playerID, move.pos.X, move.pos.Y)
 			arena, ok := m.active[move.matchID]
 			if !ok {
 				fmt.Printf("Manager: got move for unknown game (%d)", move.matchID)
@@ -52,7 +52,7 @@ func (m *Manager) waitForEvents() {
 			}
 
 			arena.state.MoveUser(move.playerID, move.pos)
-			arena.sendMessages()
+			arena.sendPositions()
 		}
 	}
 }
@@ -99,7 +99,7 @@ func (m *Manager) match() *Manager {
 			continue
 		}
 
-		fmt.Printf("Manager: created game (%s)\n", game.ID)
+		fmt.Printf("Manager: created game (%d)\n", game.ID)
 
 		arena.start(game.ID, m.ActiveCh)
 
