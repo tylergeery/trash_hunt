@@ -6,7 +6,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/tylergeery/trash_hunt/game"
+	"github.com/tylergeery/trash_hunt/model"
 )
 
 var signingKey []byte
@@ -16,7 +16,7 @@ func init() {
 }
 
 // CreateToken creates auth token for player
-func CreateToken(player *game.Player) (string, error) {
+func CreateToken(player *model.Player) (string, error) {
 	dur, _ := time.ParseDuration("60m")
 	claims := jwt.MapClaims{
 		"player_id": player.ID,

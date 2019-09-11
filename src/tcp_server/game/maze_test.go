@@ -10,19 +10,19 @@ func TestNewMaze(t *testing.T) {
 	for i := 0; i < gameBoardSize; i++ {
 		for j := 0; j < gameBoardSize; j++ {
 			for k := 0; k < 4; k++ {
-				exp := false
+				exp := int8(0)
 				if i == 0 && k == 0 {
-					exp = true
+					exp = 1
 				} else if i == (gameBoardSize-1) && k == 2 {
-					exp = true
+					exp = 1
 				} else if j == 0 && k == 3 {
-					exp = true
+					exp = 1
 				} else if j == (gameBoardSize-1) && k == 1 {
-					exp = true
+					exp = 1
 				}
 
 				if maze.Walls[i][j][k] != exp {
-					t.Fatalf("Wall %d %d %d is not %t", i, j, k, exp)
+					t.Fatalf("Wall %d %d %d is not %d", i, j, k, exp)
 				}
 			}
 		}
@@ -79,16 +79,16 @@ func TestAddWallsAndRevert(t *testing.T) {
 			maze.addWalls(pos)
 			for _, wall := range c.walls[i] {
 				// check that walls exist
-				if !maze.Walls[wall[0]][wall[1]][wall[2]] {
-					t.Fatalf("Wall should exist at spot %d %d %d", wall[0], wall[1], wall[2])
+				if maze.Walls[wall[0]][wall[1]][wall[2]] == 0 {
+					t.Fatalf("Wall should exist at spot maze.Walls[%d][%d][%d]", wall[0], wall[1], wall[2])
 				}
 			}
 
 			maze.revert()
 			for _, wall := range c.walls[i] {
 				// check that walls no longer exist
-				if maze.Walls[wall[0]][wall[1]][wall[2]] {
-					t.Fatalf("Wall should not exist at spot %d %d %d", wall[0], wall[1], wall[2])
+				if maze.Walls[wall[0]][wall[1]][wall[2]] == 1 {
+					t.Fatalf("Wall should not exist at spot maze.Walls[%d][%d][%d]: %d", wall[0], wall[1], wall[2], maze.Walls[wall[0]][wall[1]][wall[2]])
 				}
 			}
 		}

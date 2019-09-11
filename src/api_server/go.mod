@@ -12,7 +12,7 @@ require (
 	github.com/lib/pq v1.2.0
 	github.com/stretchr/testify v1.3.0 // indirect
 	github.com/tylergeery/trash_hunt/auth v0.0.0
-	github.com/tylergeery/trash_hunt/game v0.0.0
+	github.com/tylergeery/trash_hunt/model v0.0.0
 	github.com/tylergeery/trash_hunt/storage v0.0.0
 	github.com/tylergeery/trash_hunt/test v0.0.0
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
@@ -20,7 +20,7 @@ require (
 
 replace github.com/tylergeery/trash_hunt/auth => ../auth
 
-replace github.com/tylergeery/trash_hunt/game => ../game
+replace github.com/tylergeery/trash_hunt/model => ../model
 
 replace github.com/tylergeery/trash_hunt/storage => ../storage
 

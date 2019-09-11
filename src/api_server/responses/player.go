@@ -1,7 +1,7 @@
 package responses
 
 import (
-	"github.com/tylergeery/trash_hunt/game"
+	"github.com/tylergeery/trash_hunt/model"
 )
 
 // PlayerUpdateResponse - Response to PlayerUpdateRequest
@@ -11,6 +11,6 @@ type PlayerUpdateResponse struct {
 
 // PlayerLoginResponse - Response to PlayerLoginRequest
 type PlayerLoginResponse struct {
-	Player *game.Player `json:"player"`
-	Token  string       `json:"token"`
+	Player *model.Player `json:"player"`
+	Token  string        `json:"token"`
 }

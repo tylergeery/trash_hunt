@@ -1,4 +1,4 @@
-package game
+package model
 
 import (
 	"errors"
@@ -24,7 +24,6 @@ type Player struct {
 	pw         string
 	Name       string `json:"name"`
 	FacebookID string `json:"facebook_id"`
-	Pos        Pos    `json:"pos"`
 	Token      string `json:"token"`
 	Status     int    `json:"status"`
 	CreatedAt  string `json:"created_at"`

@@ -5,12 +5,12 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/tylergeery/trash_hunt/game"
+	"github.com/tylergeery/trash_hunt/model"
 )
 
 func TestCreatingAndExtractingToken(t *testing.T) {
 	var playerID int64 = 296
-	player := game.PlayerNew(playerID, "", "", "", "", "", game.PlayerStatusActive, "", "")
+	player := model.PlayerNew(playerID, "", "", "", "", "", model.PlayerStatusActive, "", "")
 	token, err := CreateToken(player)
 
 	if err != nil || token == "" {

@@ -10,13 +10,12 @@ const gameBoardSize = 10
 
 // State controls all state related to the game playing
 type State struct {
-	Player1 *Player `json:"player1"`
-	Player2 *Player `json:"player2"`
-	Maze    *Maze   `json:"maze"`
+	Players map[int64]*Player `json:"players"`
+	Maze    *Maze             `json:"maze"`
 }
 
-// InitializeGameState - setup new maze and player/trash pos for gameplay
-func InitializeGameState(player1, player2 *Player) *State {
+// NewState sets new maze and player/trash pos for gameplay
+func NewState(player1, player2 *Player) *State {
 	var s State
 
 	// Initialize a new random seed
@@ -26,12 +25,13 @@ func InitializeGameState(player1, player2 *Player) *State {
 	s.Maze = NewMaze()
 	s.Maze.TrashPos.X = 1
 	s.Maze.TrashPos.Y = 9
-	s.Player1 = player1
-	s.Player1.Pos.X = rand.Intn(gameBoardSize)
-	s.Player1.Pos.Y = rand.Intn(gameBoardSize)
-	s.Player2 = player2
-	s.Player2.Pos.X = rand.Intn(gameBoardSize)
-	s.Player2.Pos.Y = rand.Intn(gameBoardSize)
+	s.Players = make(map[int64]*Player)
+	s.Players[player1.ID] = player1
+	player1.Pos.X = rand.Intn(gameBoardSize)
+	player1.Pos.Y = rand.Intn(gameBoardSize)
+	s.Players[player2.ID] = player2
+	player2.Pos.X = rand.Intn(gameBoardSize)
+	player2.Pos.Y = rand.Intn(gameBoardSize)
 
 	return &s
 }
@@ -56,10 +56,18 @@ func (s *State) StartWithDifficulty(difficulty int) {
 
 // IsValid - ensure maze is valid
 func (s *State) IsValid() bool {
+	// Players can share outcomes and visited state
 	outcomes := map[string]bool{}
 	visited := []Pos{}
 
-	return s.PlayerCanFinish(s.Player1, outcomes, visited) && s.PlayerCanFinish(s.Player2, outcomes, visited)
+	for id := range s.Players {
+		player := s.Players[id]
+		if !s.PlayerCanFinish(player, outcomes, visited) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // PlayerCanFinish - can the given player finish?
@@ -132,6 +140,16 @@ func (s *State) getAvailableMoves(player *Player, visited []Pos) []Pos {
 	next.X = player.Pos.X
 
 	return positions
+}
+
+// TODO: test
+// MoveUser changes the current position of a user to the nextPos
+func (s *State) MoveUser(playerID int64, nextPos Pos) {
+	player := s.Players[playerID]
+
+	if s.Maze.CanMoveBetween(player.Pos, nextPos) {
+		player.Pos = nextPos
+	}
 }
 
 func hasVisited(pos Pos, visited []Pos) bool {

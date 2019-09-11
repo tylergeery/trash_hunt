@@ -1,25 +1,35 @@
 package game
 
+import "fmt"
+
 // Maze handles all the information related to the game maze
 type Maze struct {
 	TrashPos Pos        `json:"trashPos"`
-	Walls    [][][]bool `json:"walls"`
+	Walls    [][][]int8 `json:"walls"`
 	recent   int
+}
+
+func toInt8(b bool) int8 {
+	if b {
+		return 1
+	}
+
+	return 0
 }
 
 // NewMaze - maze constructor
 func NewMaze() *Maze {
-	walls := make([][][]bool, gameBoardSize)
+	walls := make([][][]int8, gameBoardSize)
 
 	for i := 0; i < gameBoardSize; i++ {
-		walls[i] = make([][]bool, gameBoardSize)
+		walls[i] = make([][]int8, gameBoardSize)
 
 		for j := 0; j < gameBoardSize; j++ {
-			walls[i][j] = []bool{
-				i == 0,
-				j == (gameBoardSize - 1),
-				i == (gameBoardSize - 1),
-				j == 0,
+			walls[i][j] = []int8{
+				toInt8(i == 0),
+				toInt8(j == (gameBoardSize - 1)),
+				toInt8(i == (gameBoardSize - 1)),
+				toInt8(j == 0),
 			}
 		}
 	}
@@ -31,19 +41,20 @@ func NewMaze() *Maze {
 }
 
 func (m *Maze) revert() {
+	fmt.Printf("Removing wall from recent: %d\n", m.recent)
 	m.removeWalls(m.recent)
 }
 
 func (m *Maze) addWalls(pos int) {
 	m.recent = pos
-	m.setWalls(pos, true)
+	m.setWalls(pos, 1)
 }
 
 func (m *Maze) removeWalls(pos int) {
-	m.setWalls(pos, false)
+	m.setWalls(pos, 0)
 }
 
-func (m *Maze) setWalls(pos int, value bool) {
+func (m *Maze) setWalls(pos int, value int8) {
 	wall := (pos % 4)
 
 	switch wall {
@@ -70,7 +81,7 @@ func (m *Maze) setWalls(pos int, value bool) {
 	}
 }
 
-func (m *Maze) setWall(pos int, value bool) {
+func (m *Maze) setWall(pos int, value int8) {
 	rowTotal := 4 * gameBoardSize
 
 	m.Walls[pos/rowTotal][(pos%rowTotal)/4][pos%4] = value
@@ -79,7 +90,7 @@ func (m *Maze) setWall(pos int, value bool) {
 func (m *Maze) hasWall(pos int) bool {
 	rowTotal := 4 * gameBoardSize
 
-	return m.Walls[pos/rowTotal][(pos%rowTotal)/4][pos%4]
+	return (m.Walls[pos/rowTotal][(pos%rowTotal)/4][pos%4]) > 0
 }
 
 // CanMoveBetween two positons (are there walls blocking?)

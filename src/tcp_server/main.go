@@ -1,98 +1,83 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 	"os"
 	"time"
 
-	"github.com/tylergeery/trash_hunt/game"
+	"github.com/tylergeery/trash_hunt/tcp_server/connection"
 )
 
-const connectionCount = 10
+const connectionCount = 100
+
+var manager *connection.Manager
 
 func main() {
 	service := ":8080"
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
-	checkError(err)
-
-	// set up thread pool
-	events := make(chan net.Conn, connectionCount*2)
-	for i := 0; i < connectionCount; i++ {
-		go handleConnection(events)
+	if err != nil {
+		panic(err)
 	}
 
-	// accept connetions
+	// set up game manager
+	manager = connection.NewManager(connectionCount)
+
+	// set up thread pool
+	for i := 0; i < connectionCount; i++ {
+		go handleConnection(manager)
+	}
+
+	// accept connections
 	listener, err := net.ListenTCP("tcp", tcpAddr)
-	checkError(err)
+	if err != nil {
+		panic(err)
+	}
+
+	// start manager routine for ng matching clients
+	go manager.Start()
+
+	// TODO: make sure the manager will clean up lingering goroutines
 
 	// pass connections to pool
 	for {
-		conn, err := listener.Accept()
+		conn, err := listener.AcceptTCP()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Connection accept error: %s", err.Error())
 			continue
 		}
-		events <- conn
+		manager.InitCh <- conn
 	}
 }
 
-func handleConnection(connections chan net.Conn) {
+func handleConnection(manager *connection.Manager) {
 	for {
-		conn := <-connections
+		conn := <-manager.InitCh
 
-		// set up what game we are in
-		game := game.State{}
-
-		handleClient(conn, game)
+		fmt.Printf("Got a connection\n")
+		handleClient(conn, manager)
 	}
 }
 
-func handleClient(conn net.Conn, gameState game.State) {
-	conn.SetReadDeadline(time.Now().Add(10 * time.Minute)) // set 2 minutes timeout
-	request := make([]byte, 10)
+func handleClient(conn *net.TCPConn, manager *connection.Manager) {
+	conn.SetReadDeadline(time.Now().Add(10 * time.Minute)) // TODO: game duration
+	conn.SetKeepAlive(true)
 	defer conn.Close()
 
-	for {
-		readLen, err := conn.Read(request)
-
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Connection read error: %s", err.Error())
-			break
-		}
-
-		if readLen == 0 {
-			break // connection already closed by client
-		}
-
-		switch request[0] {
-		case 'l':
-			// move left
-		case 'r':
-			// move right
-		case 'u':
-			// move up
-		case 'd':
-			// move down
-		}
-
-		// update for opponent status
-
-		// check for winner
-
-		msg, err := json.Marshal(gameState)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Marshal error: %s", err.Error())
-			continue
-		}
-		conn.Write(msg)
-	}
-}
-
-func checkError(err error) {
+	// Try to turn connection into game player
+	client := connection.NewClient(conn)
+	err := client.ValidateUser()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Fatal error: %s", err.Error())
-		os.Exit(1)
+		fmt.Fprintf(os.Stderr, err.Error())
+		return
 	}
+
+	// Make sure we let the manager know the client is gone
+	defer func() {
+		manager.ExitCh <- client
+	}()
+
+	// Client will wait for manager to start a match
+	manager.PendingCh <- client
+	client.WaitForStart()
 }

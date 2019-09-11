@@ -7,6 +7,7 @@ github.com/goware/emailx v0.2.0/go.mod h1:3QlOsDnxq9di9qE7ZbiHpFHeDADkem62XZ1MS1
 github.com/lib/pq v1.2.0 h1:LXpIM/LZ5xGFhOpXAQUIMM1HdyqzVYM13zNdjCEEcA0=
 github.com/lib/pq v1.2.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/tylergeery/trash_hunt v0.0.0-20190720054547-f3035824a2cb h1:WPk9FjoL/PEdDElGXusQJsr9f6KPbXhJiCl/E8axcsw=
+github.com/tylergeery/trash_hunt v0.0.0-20190820042743-0e9d75252253 h1:Mb490MAJNxCSpXKwTDCIPibC5dySFBi1hGMpzV8a9sg=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 h1:HuIa8hRrWRSrqYzx1qI49NNxhdi2PrY7gxVSq1JjLDc=
 golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=

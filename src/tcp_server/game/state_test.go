@@ -4,20 +4,22 @@ import (
 	"testing"
 )
 
-func TestInitializeGameState(t *testing.T) {
-	p1 := PlayerNew(1, "", "", "", "", "", PlayerStatusActive, "", "")
-	p2 := PlayerNew(1, "", "", "", "", "", PlayerStatusActive, "", "")
-	state := InitializeGameState(p1, p2)
+func TestNewState(t *testing.T) {
+	p1 := NewPlayer(1)
+	p2 := NewPlayer(1)
+	state := NewState(p1, p2)
 
 	if state.Maze.TrashPos.X == 0 && state.Maze.TrashPos.Y == 0 {
 		t.Fatalf("Trash Pos still at (0,0)")
 	}
 
-	if state.Player1.Pos.X == 0 && state.Player1.Pos.Y == 0 {
+	player1, _ := state.Players[p1.ID]
+	player2, _ := state.Players[p2.ID]
+	if player1.Pos.X == 0 && player1.Pos.Y == 0 {
 		t.Fatalf("Player1 Pos still at (0,0)")
 	}
 
-	if state.Player2.Pos.X == 0 && state.Player2.Pos.Y == 0 {
+	if player2.Pos.X == 0 && player2.Pos.Y == 0 {
 		t.Fatalf("Player2 Pos still at (0,0)")
 	}
 }
@@ -26,9 +28,9 @@ func TestInitializeWithDifficulty(t *testing.T) {
 	difficulties := []int{1, 5, 10}
 
 	for _, d := range difficulties {
-		p1 := PlayerNew(1, "", "", "", "", "", PlayerStatusActive, "", "")
-		p2 := PlayerNew(1, "", "", "", "", "", PlayerStatusActive, "", "")
-		state := InitializeGameState(p1, p2)
+		p1 := NewPlayer(1)
+		p2 := NewPlayer(1)
+		state := NewState(p1, p2)
 		state.StartWithDifficulty(d)
 
 		if !state.IsValid() {
@@ -38,13 +40,13 @@ func TestInitializeWithDifficulty(t *testing.T) {
 }
 
 func TestPlayerCanFinish(t *testing.T) {
-	p1 := PlayerNew(1, "", "", "", "", "", PlayerStatusActive, "", "")
-	p2 := PlayerNew(1, "", "", "", "", "", PlayerStatusActive, "", "")
-	state := InitializeGameState(p1, p2)
-	state.Player1.Pos.X = state.Maze.TrashPos.X
-	state.Player1.Pos.Y = state.Maze.TrashPos.Y
-	state.Player2.Pos.X = state.Maze.TrashPos.X
-	state.Player2.Pos.Y = state.Maze.TrashPos.Y - 1
+	p1 := NewPlayer(2)
+	p2 := NewPlayer(10)
+	state := NewState(p1, p2)
+	p1.Pos.X = state.Maze.TrashPos.X
+	p1.Pos.Y = state.Maze.TrashPos.Y
+	p2.Pos.X = state.Maze.TrashPos.X
+	p2.Pos.Y = state.Maze.TrashPos.Y - 1
 	outcomes := map[string]bool{}
 	visited := []Pos{}
 
@@ -63,9 +65,9 @@ func TestGetAvailableMoves(t *testing.T) {
 		exp []Pos
 	}
 
-	p1 := PlayerNew(1, "", "", "", "", "", PlayerStatusActive, "", "")
-	p2 := PlayerNew(1, "", "", "", "", "", PlayerStatusActive, "", "")
-	state := InitializeGameState(p1, p2)
+	p1 := NewPlayer(1)
+	p2 := NewPlayer(1)
+	state := NewState(p1, p2)
 	testCases := []TestCase{
 		TestCase{
 			p:   Pos{0, 0},
