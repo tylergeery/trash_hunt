@@ -1,11 +1,10 @@
-on:
-  push:
-    branches:
-    - *
+on: [push]
 jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
+    - name: Build Docker Images
+      run: make dev-images
     - name: Build Dev ENV
       run: make dev
     - name: Run Tests
