@@ -3,7 +3,7 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
-    - uses: tylergeery/trash_hunt@master
+    - uses: actions/checkout@master
     - name: List directory
       run: ls -la
     - name: Build Docker Images
