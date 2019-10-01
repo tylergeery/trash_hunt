@@ -4,9 +4,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: List directory
-      run: ls -la
+      run: pwd && ls -la
     - name: Build Docker Images
-      run: make dev-images
+      run: cat Makefile && make dev-images
     - name: Build Dev ENV
       run: make dev
     - name: Run Tests
