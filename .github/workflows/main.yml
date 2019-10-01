@@ -4,7 +4,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: List directory
-      run: pwd && ls -la
+      run: ls -la /home/runner/work/trash_hunt
     - name: Build Docker Images
       run: cat Makefile && make dev-images
     - name: Build Dev ENV
