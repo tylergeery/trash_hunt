@@ -20,6 +20,17 @@ func setupPlayer(player *model.Player) net.Conn {
 		panic(fmt.Sprintf("Could not create token for player: %s", err))
 	}
 
+	// set up player preferences
+	playerPreferences := connection.GameSetUp{
+		UserToken:  playerToken,
+		Opponent:   -1,     // -1 means computer opponent
+		Difficulty: "easy", // To help with matching
+	}
+	preferences, err := json.Marshal(playerPreferences)
+	if err != nil {
+		panic(fmt.Sprintf("Could not create player preferences: %s", err))
+	}
+
 	// open game connection
 	conn, err := net.Dial("tcp", "127.0.0.1:8080")
 	if err != nil {
@@ -30,10 +41,10 @@ func setupPlayer(player *model.Player) net.Conn {
 	conn.SetReadDeadline(time.Now().Add(10 * time.Second)) // TODO: game duration
 
 	// authenticate
-	fmt.Printf("Sending player token: %s\n", playerToken)
-	_, err = conn.Write([]byte(playerToken))
+	fmt.Printf("Sending player preferences: %s\n", playerToken)
+	_, err = conn.Write(preferences)
 	if err != nil {
-		panic(fmt.Sprintf("Could not write player token: %s", playerToken))
+		panic(fmt.Sprintf("Could not write player preferences: %s", playerToken))
 	}
 
 	// listen for reply
@@ -96,6 +107,14 @@ func main() {
 	}
 
 	// TODO: Move sure the computer player moved as well
+	if state.Players[-1].GetPos().X == state2.Players[-1].GetPos().X && state.Players[-1].GetPos().Y == state2.Players[-1].GetPos().Y {
+		panic(
+			fmt.Sprintf(
+				"Computer Player was expected to move from pos (%d, %d)",
+				state.Players[-1].GetPos().X, state.Players[-1].GetPos().Y,
+			),
+		)
+	}
 
 	// Try to win?
 	fmt.Println("Game over")

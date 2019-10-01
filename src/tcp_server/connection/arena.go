@@ -55,6 +55,23 @@ func (a *Arena) sendInitialState() {
 	}
 }
 
+// MoveUser changes the current position of a user to the nextPos
+// TODO: Test
+func (a *Arena) MoveUser(playerID int64, nextPos game.Pos) {
+	a.state.MoveUser(playerID, nextPos)
+	difficulty := 1
+	for id := range a.state.Players {
+		if id == playerID {
+			continue
+		}
+		if id == -1 {
+			// move computer player (as response)
+			solver := NewSolver(difficulty)
+			a.state.MoveUser(-1, solver.GetMove(-1, a.state))
+		}
+	}
+}
+
 func (a *Arena) sendPositions() {
 	message, _ := json.Marshal(a.state.Players)
 	fmt.Printf("Arena: sending positions: %s", message)

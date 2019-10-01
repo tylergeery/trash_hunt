@@ -3,6 +3,8 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
+    - name: List directory
+      run: ls -la
     - name: Build Docker Images
       run: make dev-images
     - name: Build Dev ENV

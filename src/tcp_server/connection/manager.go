@@ -52,7 +52,7 @@ func (m *Manager) waitForEvents() {
 				continue
 			}
 
-			arena.state.MoveUser(move.playerID, move.pos)
+			arena.MoveUser(move.playerID, move.pos)
 			arena.sendPositions()
 		}
 	}

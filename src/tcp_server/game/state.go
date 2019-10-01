@@ -86,7 +86,7 @@ func (s *State) PlayerCanFinish(player *Player, outcomes map[string]bool, visite
 		player.SetPos(originalPos)
 	}()
 
-	for _, pos := range s.getAvailableMoves(player, visited) {
+	for _, pos := range s.findAvailableMoves(player, visited) {
 		player.SetPos(pos)
 		key := fmt.Sprintf("%d-%d", pos.X, pos.Y)
 		visited = append(visited, Pos{pos.X, pos.Y})
@@ -108,7 +108,13 @@ func (s *State) PlayerCanFinish(player *Player, outcomes map[string]bool, visite
 	return false
 }
 
-func (s *State) getAvailableMoves(player *Player, visited []Pos) []Pos {
+func (s *State) GetAvailableMoves(playerID int64) []Pos {
+	visited := []Pos{}
+
+	return s.findAvailableMoves(s.Players[playerID], visited)
+}
+
+func (s *State) findAvailableMoves(player *Player, visited []Pos) []Pos {
 	positions := []Pos{}
 	next := Pos{player.GetPos().X, player.GetPos().Y}
 

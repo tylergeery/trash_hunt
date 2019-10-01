@@ -59,7 +59,7 @@ func TestPlayerCanFinish(t *testing.T) {
 	}
 }
 
-func TestGetAvailableMoves(t *testing.T) {
+func TestFindAvailableMoves(t *testing.T) {
 	type TestCase struct {
 		p   Pos
 		exp []Pos
@@ -94,7 +94,7 @@ func TestGetAvailableMoves(t *testing.T) {
 	for _, test := range testCases {
 		p1.Pos = test.p
 		visited := []Pos{}
-		moves := state.getAvailableMoves(p1, visited)
+		moves := state.findAvailableMoves(p1, visited)
 
 		if len(moves) != len(test.exp) {
 			t.Fatalf("Moves had len: %d, but expected length: %d", len(moves), len(test.exp))
