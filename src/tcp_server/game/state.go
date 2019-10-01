@@ -26,12 +26,16 @@ func NewState(player1, player2 *Player) *State {
 	s.Maze.TrashPos.X = 1
 	s.Maze.TrashPos.Y = 9
 	s.Players = make(map[int64]*Player)
-	s.Players[player1.ID] = player1
-	player1.Pos.X = rand.Intn(gameBoardSize)
-	player1.Pos.Y = rand.Intn(gameBoardSize)
-	s.Players[player2.ID] = player2
-	player2.Pos.X = rand.Intn(gameBoardSize)
-	player2.Pos.Y = rand.Intn(gameBoardSize)
+	s.Players[player1.GetID()] = player1
+	player1.SetPos(Pos{
+		X: rand.Intn(gameBoardSize),
+		Y: rand.Intn(gameBoardSize),
+	})
+	s.Players[player2.GetID()] = player2
+	player2.SetPos(Pos{
+		X: rand.Intn(gameBoardSize),
+		Y: rand.Intn(gameBoardSize),
+	})
 
 	return &s
 }
@@ -73,20 +77,17 @@ func (s *State) IsValid() bool {
 // PlayerCanFinish - can the given player finish?
 func (s *State) PlayerCanFinish(player *Player, outcomes map[string]bool, visited []Pos) bool {
 	// fmt.Printf("Player can finish (%d, %d), trash (%d, %d)\n", player.Pos.X, player.Pos.Y, s.Maze.TrashPos.X, s.Maze.TrashPos.Y)
-	if player.Pos.X == s.Maze.TrashPos.X && player.Pos.Y == s.Maze.TrashPos.Y {
+	if player.GetPos().X == s.Maze.TrashPos.X && player.GetPos().Y == s.Maze.TrashPos.Y {
 		return true
 	}
 
-	originalPosX := player.Pos.X
-	originalPosY := player.Pos.Y
+	originalPos := player.GetPos()
 	defer func() {
-		player.Pos.X = originalPosX
-		player.Pos.Y = originalPosY
+		player.SetPos(originalPos)
 	}()
 
-	for _, pos := range s.getAvailableMoves(player, visited) {
-		player.Pos.X = pos.X
-		player.Pos.Y = pos.Y
+	for _, pos := range s.findAvailableMoves(player, visited) {
+		player.SetPos(pos)
 		key := fmt.Sprintf("%d-%d", pos.X, pos.Y)
 		visited = append(visited, Pos{pos.X, pos.Y})
 
@@ -107,48 +108,54 @@ func (s *State) PlayerCanFinish(player *Player, outcomes map[string]bool, visite
 	return false
 }
 
-func (s *State) getAvailableMoves(player *Player, visited []Pos) []Pos {
+func (s *State) GetAvailableMoves(playerID int64) []Pos {
+	visited := []Pos{}
+
+	return s.findAvailableMoves(s.Players[playerID], visited)
+}
+
+func (s *State) findAvailableMoves(player *Player, visited []Pos) []Pos {
 	positions := []Pos{}
-	next := Pos{player.Pos.X, player.Pos.Y}
+	next := Pos{player.GetPos().X, player.GetPos().Y}
 
 	// can player go up?
-	next.Y = player.Pos.Y - 1
-	if next.Y >= 0 && s.Maze.CanMoveBetween(player.Pos, next) && !hasVisited(next, visited) {
+	next.Y = player.GetPos().Y - 1
+	if next.Y >= 0 && s.Maze.CanMoveBetween(player.GetPos(), next) && !hasVisited(next, visited) {
 		positions = append(positions, Pos{next.X, next.Y})
 	}
-	next.Y = player.Pos.Y
+	next.Y = player.GetPos().Y
 
 	// can player go right?
-	next.X = player.Pos.X + 1
-	if next.X < gameBoardSize && s.Maze.CanMoveBetween(player.Pos, next) && !hasVisited(next, visited) {
+	next.X = player.GetPos().X + 1
+	if next.X < gameBoardSize && s.Maze.CanMoveBetween(player.GetPos(), next) && !hasVisited(next, visited) {
 		positions = append(positions, Pos{next.X, next.Y})
 	}
-	next.X = player.Pos.X
+	next.X = player.GetPos().X
 
 	// can player go down?
-	next.Y = player.Pos.Y + 1
-	if next.Y < gameBoardSize && s.Maze.CanMoveBetween(player.Pos, next) && !hasVisited(next, visited) {
+	next.Y = player.GetPos().Y + 1
+	if next.Y < gameBoardSize && s.Maze.CanMoveBetween(player.GetPos(), next) && !hasVisited(next, visited) {
 		positions = append(positions, Pos{next.X, next.Y})
 	}
-	next.Y = player.Pos.Y
+	next.Y = player.GetPos().Y
 
 	// can player go left?
-	next.X = player.Pos.X - 1
-	if player.Pos.X >= 0 && s.Maze.CanMoveBetween(player.Pos, next) && !hasVisited(next, visited) {
+	next.X = player.GetPos().X - 1
+	if player.GetPos().X >= 0 && s.Maze.CanMoveBetween(player.GetPos(), next) && !hasVisited(next, visited) {
 		positions = append(positions, Pos{next.X, next.Y})
 	}
-	next.X = player.Pos.X
+	next.X = player.GetPos().X
 
 	return positions
 }
 
-// TODO: test
 // MoveUser changes the current position of a user to the nextPos
+// TODO: Test
 func (s *State) MoveUser(playerID int64, nextPos Pos) {
 	player := s.Players[playerID]
 
-	if s.Maze.CanMoveBetween(player.Pos, nextPos) {
-		player.Pos = nextPos
+	if s.Maze.CanMoveBetween(player.GetPos(), nextPos) {
+		player.SetPos(nextPos)
 	}
 }
 

@@ -50,7 +50,7 @@ ENTRYPOINT /go/bin/trash_hunt_tcp_server
 
 FROM tcp_server as tcp_server_dev
 
-RUN apt install net-tools
+RUN apt-get update && apt-get install net-tools
 RUN go get -u github.com/githubnemo/CompileDaemon
 
 ENTRYPOINT CompileDaemon -log-prefix=false -build="go build -o /go/bin/trash_hunt_tcp_server ." -command="/go/bin/trash_hunt_tcp_server"

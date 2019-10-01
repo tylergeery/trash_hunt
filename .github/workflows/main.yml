@@ -3,9 +3,14 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@master
     - name: Build Docker Images
       run: make dev-images
     - name: Build Dev ENV
       run: make dev
     - name: Run Tests
-      run: make test
+      run: make test-ci
+    - name: Run Player vs Player
+      run: docker exec trash-hunt-tcp-server-dev go run examples/active/main.go
+    - name: Run Player vs Computer
+      run: docker exec trash-hunt-tcp-server-dev go run examples/computer/main.go

@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/tylergeery/trash_hunt/model"
+	"github.com/tylergeery/trash_hunt/tcp_server/game"
 )
 
 // Manager handles the creation of matches (updating movements)
@@ -51,13 +52,18 @@ func (m *Manager) waitForEvents() {
 				continue
 			}
 
-			arena.state.MoveUser(move.playerID, move.pos)
+			arena.MoveUser(move.playerID, move.pos)
 			arena.sendPositions()
 		}
 	}
 }
 
 func (m *Manager) addPending(client *Client) *Manager {
+	// Check if user wants to play computer
+	if client.preferences.Opponent == -1 {
+		m.createMatch(client, nil)
+	}
+
 	m.pending[client.player.ID] = client
 
 	return m
@@ -79,36 +85,61 @@ func (m *Manager) endMatch(matchID int64) *Manager {
 	return m
 }
 
+func (m *Manager) createMatch(client1, client2 *Client) bool {
+	var arena *Arena
+	var match *model.Game
+	var err error
+
+	if client2 == nil {
+		// Create Computer
+		computer := game.NewPlayer(-1)
+		arena = NewArena(client1.player, computer, client1)
+		match, err = model.CreateNewGame(client1.player.ID, -1)
+	} else {
+		arena = NewArena(client1.player, client2.player, client1, client2)
+		match, err = model.CreateNewGame(client1.player.ID, client2.player.ID)
+	}
+
+	if err != nil {
+		fmt.Printf("Manager: could not start match (%s)\n", err)
+		return false
+	}
+
+	fmt.Printf("Manager: created game (%d)\n", match.ID)
+
+	arena.start(match.ID, m.ActiveCh)
+
+	fmt.Printf("Manager: done notifying clients\n")
+
+	// update manager's records
+	m.active[match.ID] = arena
+
+	return true
+}
+
 // Match takes pending players and creates matches
 func (m *Manager) match() *Manager {
 	fmt.Println("Manager: trying to match")
-	ids := []int64{}
+	playersByDifficulty := map[string][]int64{}
 
 	for k := range m.pending {
-		ids = append(ids, k)
+
+		diff := m.pending[k].preferences.Difficulty
+		playersByDifficulty[diff] = append(playersByDifficulty[diff], k)
 	}
 
 	// TODO: make a real matching algorithm
-	for len(ids) > 1 {
-		client1, _ := m.pending[ids[0]]
-		client2, _ := m.pending[ids[1]]
-		arena := NewArena(client1, client2)
-		game, err := model.CreateNewGame(client1.player.ID, client2.player.ID)
-		if err != nil {
-			fmt.Printf("Manager: could not start match (%s)\n", err)
-			continue
+	for d := range playersByDifficulty {
+		for len(playersByDifficulty[d]) > 1 {
+			client1, _ := m.pending[playersByDifficulty[d][0]]
+			client2, _ := m.pending[playersByDifficulty[d][1]]
+			success := m.createMatch(client1, client2)
+			if !success {
+				continue
+			}
+			m.removePending(client1).removePending(client2)
+			playersByDifficulty[d] = playersByDifficulty[d][2:]
 		}
-
-		fmt.Printf("Manager: created game (%d)\n", game.ID)
-
-		arena.start(game.ID, m.ActiveCh)
-
-		fmt.Printf("Manager: done notifying clients\n")
-
-		// update manager's records
-		m.active[game.ID] = arena
-		m.removePending(client1).removePending(client2)
-		ids = ids[2:]
 	}
 
 	return m

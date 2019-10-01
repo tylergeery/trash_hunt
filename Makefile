@@ -81,6 +81,13 @@ db-downgrade: ## Revert the most recent applied DB migration
 	$(eval $@_DB_HOST := $(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' $(container_postgres_dev)))
 	docker run --rm -v $(shell pwd)/db/migrations/:/go/db/migrations/ --entrypoint /bin/bash $(image_migrator) -c 'migrate -path=/go/db/migrations/ -database postgres://$(db_user_dev):$(db_pass_dev)@$($@_DB_HOST):5432/$(db_name_dev)?sslmode=disable down 1'
 
+test-ci: ## Run tests in CI env
+	$(eval $@_DB_HOST := $(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' $(container_postgres_dev)))
+	$(eval $@_REDIS_HOST := $(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' $(container_redis_dev)))
+	$(eval $@_API_ENV := -e DB_HOST=$($@_DB_HOST) -e DB_NAME=$(db_name_dev) -e DB_PASS=$(db_pass_dev) -e DB_USER=$(db_user_dev) -e DB_SSL_MODE=disable -e REDIS_HOST=$($@_REDIS_HOST) -e REDIS_PORT=6379)
+	docker exec $($@_API_ENV) $(container_api_server_dev) /bin/bash -c "/bin/bash /go/src/run_api_tests.sh"
+	docker exec $($@_API_ENV) $(container_tcp_server_dev) /bin/bash -c "/bin/bash /go/src/run_tcp_tests.sh"
+
 test: ## Run tests with local docker env
 	$(eval $@_DB_HOST := $(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' $(container_postgres_dev)))
 	$(eval $@_REDIS_HOST := $(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' $(container_redis_dev)))
