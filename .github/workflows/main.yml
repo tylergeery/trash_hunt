@@ -3,11 +3,16 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
+    - uses: tylergeery/trash_hunt@master
     - name: List directory
-      run: ls -la /home/runner/work/trash_hunt
+      run: ls -la
     - name: Build Docker Images
       run: cat Makefile && make dev-images
     - name: Build Dev ENV
       run: make dev
     - name: Run Tests
       run: make test
+    - name: Run Player vs Player
+      run: docker exec -it trash-hunt-tcp-server-dev go run examples/active/main.go
+    - name: Run Player vs Computer
+      run: docker exec -it trash-hunt-tcp-server-dev go run examples/computer/main.go
