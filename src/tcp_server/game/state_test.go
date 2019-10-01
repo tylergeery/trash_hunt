@@ -15,11 +15,11 @@ func TestNewState(t *testing.T) {
 
 	player1, _ := state.Players[p1.ID]
 	player2, _ := state.Players[p2.ID]
-	if player1.Pos.X == 0 && player1.Pos.Y == 0 {
+	if player1.GetPos().X == 0 && player1.GetPos().Y == 0 {
 		t.Fatalf("Player1 Pos still at (0,0)")
 	}
 
-	if player2.Pos.X == 0 && player2.Pos.Y == 0 {
+	if player2.GetPos().X == 0 && player2.GetPos().Y == 0 {
 		t.Fatalf("Player2 Pos still at (0,0)")
 	}
 }

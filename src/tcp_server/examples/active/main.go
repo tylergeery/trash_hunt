@@ -20,6 +20,16 @@ func setupPlayer(player *model.Player) net.Conn {
 		panic(fmt.Sprintf("Could not create token for player: %s", err))
 	}
 
+	playerPreferences := connection.GameSetUp{
+		UserToken:  playerToken,
+		Opponent:   0,      // 0 means no preference
+		Difficulty: "easy", // To help with matching
+	}
+	preferences, err := json.Marshal(playerPreferences)
+	if err != nil {
+		panic(fmt.Sprintf("Could not create player preferences: %s", err))
+	}
+
 	// open game connection
 	conn, err := net.Dial("tcp", "127.0.0.1:8080")
 	if err != nil {
@@ -30,10 +40,10 @@ func setupPlayer(player *model.Player) net.Conn {
 	conn.SetReadDeadline(time.Now().Add(10 * time.Second)) // TODO: game duration
 
 	// authenticate
-	fmt.Printf("Sending player token: %s\n", playerToken)
-	_, err = conn.Write([]byte(playerToken))
+	fmt.Printf("Sending player preferences: %s\n", playerToken)
+	_, err = conn.Write(preferences)
 	if err != nil {
-		panic(fmt.Sprintf("Could not write player token: %s", playerToken))
+		panic(fmt.Sprintf("Could not write player preferences: %s", playerToken))
 	}
 
 	// listen for reply
@@ -45,10 +55,6 @@ func setupPlayer(player *model.Player) net.Conn {
 
 	fmt.Printf("Player established: %s\n", playerToken)
 	return conn
-}
-
-func move() {
-
 }
 
 func main() {
@@ -78,7 +84,7 @@ func main() {
 	move := 'l'
 	state1Player1 := state1.Players[player1.ID]
 	fmt.Println(state1.Players)
-	if state1Player1.Pos.X == 0 {
+	if state1Player1.GetPos().X == 0 {
 		move = 'r'
 	}
 	_, err := player1Conn.Write([]byte{byte(move)})
@@ -101,22 +107,22 @@ func main() {
 		)
 	}
 
-	pos := state2.Players[player1.ID].Pos.X + 1
+	pos := state2.Players[player1.ID].GetPos().X + 1
 	if move == 'r' {
-		pos = state2.Players[player1.ID].Pos.X - 1
+		pos = state2.Players[player1.ID].GetPos().X - 1
 	}
-	if pos != state1.Players[player1.ID].Pos.X {
+	if pos != state1.Players[player1.ID].GetPos().X {
 		panic(
 			fmt.Sprintf(
 				"Player1 was expected to move (%s) from pos (%d, %d) to pos (%d, %d)",
 				string(move),
-				state1.Players[player1.ID].Pos.X, state1.Players[player1.ID].Pos.Y,
-				state2.Players[player1.ID].Pos.X, state2.Players[player1.ID].Pos.Y,
+				state1.Players[player1.ID].GetPos().X, state1.Players[player1.ID].GetPos().Y,
+				state2.Players[player1.ID].GetPos().X, state2.Players[player1.ID].GetPos().Y,
 			),
 		)
 	}
 
-	// Move them both and ensure each receives the other
+	// TODO: Move them both and ensure each receives the other
 
 	// Try to win?
 	fmt.Println("Game over")

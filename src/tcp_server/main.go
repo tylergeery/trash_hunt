@@ -66,7 +66,7 @@ func handleClient(conn *net.TCPConn, manager *connection.Manager) {
 
 	// Try to turn connection into game player
 	client := connection.NewClient(conn)
-	err := client.ValidateUser()
+	err := client.SetUpUser()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, err.Error())
 		return

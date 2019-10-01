@@ -2,6 +2,7 @@ package connection
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net"
 	"strings"
@@ -11,6 +12,13 @@ import (
 	"github.com/tylergeery/trash_hunt/tcp_server/game"
 )
 
+// GameSetUp is the obect for different game settings
+type GameSetUp struct {
+	UserToken  string `json:"user_token"`
+	Opponent   int64  `json:"opponent"`
+	Difficulty string `json:"difficulty"`
+}
+
 // Move is a move that a client wants to make
 type Move struct {
 	pos      game.Pos
@@ -18,6 +26,7 @@ type Move struct {
 	playerID int64
 }
 
+// NewMove returns a new game move object
 func NewMove(pos game.Pos, matchID, playerID int64) Move {
 	return Move{
 		pos:      pos,
@@ -33,6 +42,7 @@ type Client struct {
 	moveChan      chan Move
 	notifications chan int
 	player        *game.Player
+	preferences   GameSetUp
 }
 
 // NewClient returns a new active client
@@ -43,17 +53,25 @@ func NewClient(conn *net.TCPConn) *Client {
 	}
 }
 
-// ValidateUser ensures that we have a valid user player
-func (c *Client) ValidateUser() error {
-	msg := make([]byte, 250)
-	userToken, err := c.gatherInput(msg)
+// SetUpUser ensures that we have a valid user player
+func (c *Client) SetUpUser() error {
+	var gameSetUp GameSetUp
+	msg := make([]byte, 500)
+	settings, err := c.gatherInput(msg)
 	if err != nil {
 		fmt.Printf("Client: error getting user token: %s\n", err)
 		return err
 	}
 
-	playerID, err := auth.GetPlayerIDFromAccessToken(strings.TrimRight(userToken, " \n\t"))
-	fmt.Printf("Client: token %s\n", userToken)
+	err = json.Unmarshal([]byte(settings), &gameSetUp)
+	if err != nil {
+		fmt.Printf("Client: error unmarshaling user game set up: %s\n", err)
+		return err
+	}
+
+	c.preferences = gameSetUp
+	playerID, err := auth.GetPlayerIDFromAccessToken(strings.TrimRight(gameSetUp.UserToken, " \n\t"))
+	fmt.Printf("Client: token %s\n", gameSetUp.UserToken)
 	if err != nil {
 		fmt.Printf("Client: could not validate token, received err: %s\n", err)
 		return err
@@ -145,6 +163,7 @@ func (c *Client) WaitForStart() {
 
 			return
 		}
-		fmt.Printf("Client: Received move before game started (%s)", string(move))
+		fmt.Printf("Client: Received move before game started (%s)\n", string(move))
 	}
+	fmt.Println("Client: game finished")
 }
