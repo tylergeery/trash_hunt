@@ -51,7 +51,7 @@ func (a *Arena) sendInitialState() {
 	gameState := string(message)
 
 	for i := range a.clients {
-		a.clients[i].respond(gameState)
+		a.clients[i].conn.respond(gameState)
 	}
 }
 
@@ -82,6 +82,6 @@ func (a *Arena) sendPositions() {
 			continue
 		}
 
-		a.clients[i].respond(positions)
+		a.clients[i].conn.respond(positions)
 	}
 }

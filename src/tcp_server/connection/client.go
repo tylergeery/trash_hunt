@@ -1,10 +1,8 @@
 package connection
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"net"
 	"strings"
 
 	"github.com/tylergeery/trash_hunt/auth"
@@ -37,7 +35,7 @@ func NewMove(pos game.Pos, matchID, playerID int64) Move {
 
 // Client holds the client player information
 type Client struct {
-	conn          *net.TCPConn
+	conn          Connection
 	matchID       int64
 	moveChan      chan Move
 	notifications chan int
@@ -46,7 +44,7 @@ type Client struct {
 }
 
 // NewClient returns a new active client
-func NewClient(conn *net.TCPConn) *Client {
+func NewClient(conn Connection) *Client {
 	return &Client{
 		conn:          conn,
 		notifications: make(chan int, 5),
@@ -57,7 +55,7 @@ func NewClient(conn *net.TCPConn) *Client {
 func (c *Client) SetUpUser() error {
 	var gameSetUp GameSetUp
 	msg := make([]byte, 500)
-	settings, err := c.gatherInput(msg)
+	settings, err := c.conn.gatherInput(msg)
 	if err != nil {
 		fmt.Printf("Client: error getting user token: %s\n", err)
 		return err
@@ -80,7 +78,7 @@ func (c *Client) SetUpUser() error {
 	player := model.PlayerGetByID(playerID)
 	if player.ID == 0 {
 		fmt.Println("Client: could not find player in token")
-		c.respond(err.Error())
+		c.conn.respond(err.Error())
 		return fmt.Errorf("User with id (%d) could not be found", playerID)
 	}
 
@@ -93,7 +91,7 @@ func (c *Client) SetUpUser() error {
 // GetMove collects a move from the client
 func (c *Client) GetMove() (string, error) {
 	msg := make([]byte, 2)
-	move, err := c.gatherInput(msg)
+	move, err := c.conn.gatherInput(msg)
 
 	if err != nil {
 		return "", err
@@ -102,22 +100,10 @@ func (c *Client) GetMove() (string, error) {
 	return string(move), nil
 }
 
-func (c *Client) gatherInput(input []byte) (s string, err error) {
-	_, err = c.conn.Read(input)
-	if err != nil {
-		return
-	}
-
-	s = string(bytes.TrimRight(input, "\x00"))
-
-	return
-}
-
-// Respond sends output to the client
 func (c *Client) processGame() {
 	for {
 		fmt.Println("Client: processing game...")
-		move, err := c.gatherInput(make([]byte, 5))
+		move, err := c.conn.gatherInput(make([]byte, 5))
 		if err != nil {
 			fmt.Printf("Client: ending game, %s\n", err)
 			return
@@ -136,21 +122,11 @@ func (c *Client) processGame() {
 	}
 }
 
-// Respond sends output to the client
-func (c *Client) respond(message string) error {
-	_, err := c.conn.Write([]byte(message))
-	if err != nil {
-		fmt.Printf("Client: error sending response: %s\n", message)
-	}
-
-	return err
-}
-
 // WaitForStart holds until the game begins for clients
 func (c *Client) WaitForStart() {
 	fmt.Println("Client: waiting for start")
 
-	err := c.respond("Status: Pending")
+	err := c.conn.respond("Status: Pending")
 	if err != nil {
 		return
 	}

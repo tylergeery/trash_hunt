@@ -2,7 +2,6 @@ package connection
 
 import (
 	"fmt"
-	"net"
 
 	"github.com/tylergeery/trash_hunt/model"
 	"github.com/tylergeery/trash_hunt/tcp_server/game"
@@ -12,7 +11,7 @@ import (
 type Manager struct {
 	ActiveCh  chan Move
 	ExitCh    chan *Client
-	InitCh    chan *net.TCPConn
+	InitCh    chan Connection
 	PendingCh chan *Client
 	active    map[int64]*Arena
 	pending   map[int64]*Client
@@ -23,7 +22,7 @@ func NewManager(clients int) *Manager {
 	return &Manager{
 		ActiveCh:  make(chan Move, clients),
 		ExitCh:    make(chan *Client, clients),
-		InitCh:    make(chan *net.TCPConn, clients),
+		InitCh:    make(chan Connection, clients),
 		PendingCh: make(chan *Client, clients),
 		active:    map[int64]*Arena{},
 		pending:   map[int64]*Client{},
