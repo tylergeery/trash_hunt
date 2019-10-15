@@ -17,6 +17,6 @@ type PlayerUpdateRequest struct {
 
 // PlayerLoginRequest - Request structure for PlayerLogin request
 type PlayerLoginRequest struct {
-	Email string `json:"id"`
+	Email string `json:"email"`
 	Pw    string `json:"pw"`
 }
