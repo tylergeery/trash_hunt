@@ -8,3 +8,5 @@ FROM base as dev
 
 ENV POSTGRES_USER 'dev'
 ENV POSTGRES_PASSWORD 'dev_secret'
+
+USER 1005
