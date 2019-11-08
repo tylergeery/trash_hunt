@@ -67,14 +67,31 @@ func acceptSocketConnections(manager *connection.Manager) {
 		WriteBufferSize: 1024,
 	}
 	handler := func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Socket request received")
+		upgrader.CheckOrigin = func(r *http.Request) bool {
+			return true
+		}
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Socket upgrade error: %s", err.Error())
+			fmt.Printf("Socket upgrade error: %s", err.Error())
 			return
 		}
+
+		connOpen := true
+		conn.SetCloseHandler(func(code int, text string) error {
+			connOpen = false
+			return nil
+		})
+		conn.SetReadDeadline(time.Now().Add(10 * time.Minute)) // TODO: game duration
 		defer conn.Close()
 
 		manager.InitCh <- connection.NewSocketConnection(conn)
+
+		for connOpen {
+			// TODO: DO better
+			time.Sleep(10 * time.Millisecond)
+		}
+		fmt.Println("Letting go of websocket connection")
 	}
 
 	http.HandleFunc("/", handler)

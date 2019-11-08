@@ -10,6 +10,34 @@ import (
 	"github.com/tylergeery/trash_hunt/tcp_server/game"
 )
 
+var (
+	messageStatusPending   = 0
+	messageError           = 1
+	messageInitGame        = 2
+	messageUpdateGameState = 3
+)
+
+// GameMessage is event sent to client through connection
+type GameMessage struct {
+	Event int    `json:"event"`
+	Data  string `json:"data"`
+}
+
+// NewGameMessage creates a new event to send to client
+func NewGameMessage(event int, data string) GameMessage {
+	return GameMessage{event, data}
+}
+
+// ToBytes gets a game message as byte slice to send to client
+func (gm GameMessage) ToBytes() []byte {
+	bytes, err := json.Marshal(gm)
+	if err != nil {
+		fmt.Println("GameMessage Marshal error:", err.Error())
+	}
+
+	return bytes
+}
+
 // GameSetUp is the obect for different game settings
 type GameSetUp struct {
 	UserToken  string `json:"user_token"`
@@ -57,17 +85,18 @@ func (c *Client) SetUpUser() error {
 	msg := make([]byte, 500)
 	settings, err := c.conn.gatherInput(msg)
 	if err != nil {
-		fmt.Printf("Client: error getting user token: %s\n", err)
+		fmt.Printf("Client: error getting user game options: %s\n", err)
 		return err
 	}
 
 	err = json.Unmarshal([]byte(settings), &gameSetUp)
 	if err != nil {
-		fmt.Printf("Client: error unmarshaling user game set up: %s\n", err)
+		fmt.Printf("Client: error unmarshaling user game set up from (%s): %s\n", settings, err)
 		return err
 	}
 
 	c.preferences = gameSetUp
+	fmt.Println(gameSetUp)
 	playerID, err := auth.GetPlayerIDFromAccessToken(strings.TrimRight(gameSetUp.UserToken, " \n\t"))
 	fmt.Printf("Client: token %s\n", gameSetUp.UserToken)
 	if err != nil {
@@ -78,7 +107,7 @@ func (c *Client) SetUpUser() error {
 	player := model.PlayerGetByID(playerID)
 	if player.ID == 0 {
 		fmt.Println("Client: could not find player in token")
-		c.conn.respond(err.Error())
+		c.conn.respond(NewGameMessage(messageError, err.Error()))
 		return fmt.Errorf("User with id (%d) could not be found", playerID)
 	}
 
@@ -126,7 +155,8 @@ func (c *Client) processGame() {
 func (c *Client) WaitForStart() {
 	fmt.Println("Client: waiting for start")
 
-	err := c.conn.respond("Status: Pending")
+	msg := NewGameMessage(messageStatusPending, "Status: Pending")
+	err := c.conn.respond(msg)
 	if err != nil {
 		return
 	}

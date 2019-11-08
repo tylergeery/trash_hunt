@@ -50,6 +50,7 @@ func PlayerLogin(c *routing.Context) error {
 	}
 
 	// TODO: check if user has been rate limited
+
 	p, err := model.PlayerLogin(req.Email, req.Pw)
 	if err != nil {
 		// TODO: add rate limiting for failures on email/ip

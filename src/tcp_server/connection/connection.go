@@ -8,9 +8,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// Connection is a generic connection interface for gameplay
 type Connection interface {
 	gatherInput(input []byte) (s string, err error)
-	respond(message string) error
+	respond(message GameMessage) error
 }
 
 // TCPConnection object that implements the Connection interface
@@ -36,10 +37,11 @@ func (c *TCPConnection) gatherInput(input []byte) (s string, err error) {
 	return
 }
 
-func (c *TCPConnection) respond(message string) error {
-	_, err := c.conn.Write([]byte(message))
+func (c *TCPConnection) respond(msg GameMessage) error {
+	message := msg.ToBytes()
+	_, err := c.conn.Write(message)
 	if err != nil {
-		fmt.Printf("Client: error sending response: %s\n", message)
+		fmt.Printf("Client: error sending response: %s\n", string(message))
 	}
 
 	return err
@@ -58,11 +60,25 @@ func NewSocketConnection(conn *websocket.Conn) *SocketConnection {
 }
 
 func (c *SocketConnection) gatherInput(input []byte) (s string, err error) {
-	// TODO
+	_, input, err = c.conn.ReadMessage()
+	if err != nil {
+		return
+	}
+
+	s = string(bytes.TrimRight(input, "\x00"))
+	if s != string(input) {
+		fmt.Println("SocketClient trimmed something")
+	}
+
 	return
 }
 
-func (c *SocketConnection) respond(message string) error {
-	// TODO
-	return nil
+func (c *SocketConnection) respond(msg GameMessage) error {
+	message := msg.ToBytes()
+	err := c.conn.WriteMessage(websocket.TextMessage, message)
+	if err != nil {
+		fmt.Printf("SocketClient: error sending response: %s\n", string(message))
+	}
+
+	return err
 }
