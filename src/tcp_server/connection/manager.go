@@ -104,6 +104,7 @@ func (m *Manager) createMatch(client1, client2 *Client) bool {
 		return false
 	}
 
+	arena.state.StartWithDifficulty(10)
 	fmt.Printf("Manager: created game (%d)\n", match.ID)
 
 	arena.start(match.ID, m.ActiveCh)

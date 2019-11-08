@@ -147,7 +147,16 @@ func (c *Client) processGame() {
 			pos := game.Pos{X: c.player.Pos.X + 1, Y: c.player.Pos.Y}
 			move := NewMove(pos, c.matchID, c.player.ID)
 			c.moveChan <- move
+		case "u":
+			pos := game.Pos{X: c.player.Pos.X, Y: c.player.Pos.Y - 1}
+			move := NewMove(pos, c.matchID, c.player.ID)
+			c.moveChan <- move
+		case "d":
+			pos := game.Pos{X: c.player.Pos.X, Y: c.player.Pos.Y + 1}
+			move := NewMove(pos, c.matchID, c.player.ID)
+			c.moveChan <- move
 		}
+
 	}
 }
 
