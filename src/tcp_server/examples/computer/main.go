@@ -48,9 +48,11 @@ func setupPlayer(player *model.Player) net.Conn {
 	}
 
 	// listen for reply
+	var gameMessage connection.GameMessage
 	message := connection.ReadStringFromConn(conn, make([]byte, 50))
+	_ = json.Unmarshal([]byte(message), &gameMessage)
 
-	if strings.TrimPrefix(message, "Status: ") != "Pending" {
+	if strings.TrimPrefix(gameMessage.Data, "Status: ") != "Pending" {
 		panic(fmt.Sprintf("Received something other than status pending: \n%s\n%s", string(message), strings.TrimPrefix(string(message), "Status: ")))
 	}
 
@@ -70,43 +72,61 @@ func main() {
 
 	// Wait for game to match
 	resp := connection.ReadStringFromConn(playerConn, make([]byte, 1500))
-	var state game.State
-	json.Unmarshal([]byte(resp), &state)
+	var gameMessage connection.GameMessage
+	_ = json.Unmarshal([]byte(resp), &gameMessage)
 
-	// Move one character and ensure the other receives the move
-	move := 'l'
-	state1Player1 := state.Players[player.ID]
-	fmt.Println(state.Players)
-	if state1Player1.GetPos().X == 0 {
-		move = 'r'
-	}
-	_, err := playerConn.Write([]byte{byte(move)})
-	if err != nil {
-		panic(fmt.Sprintf("Error sending left move: %s", err))
-	}
-	positions := connection.ReadStringFromConn(playerConn, make([]byte, 100))
-	state2 := game.State{
-		Players: make(map[int64]*game.Player),
-	}
-	fmt.Println(positions)
-	json.Unmarshal([]byte(positions), &state2.Players)
+	var state, state2 game.State
+	_ = json.Unmarshal([]byte(gameMessage.Data), &state)
 
-	pos := state2.Players[player.ID].GetPos().X + 1
-	if move == 'r' {
-		pos = state2.Players[player.ID].GetPos().X - 1
+	moves := []byte("lrud")
+	playerMoved := false
+	pos := state.Players[player.ID].GetPos()
+	for _, move := range moves {
+		fmt.Println("move", string(move))
+		_, err := playerConn.Write([]byte{move})
+		if err != nil {
+			panic(fmt.Sprintf("Error sending left move: %s", err))
+		}
+
+		nextPos := game.Pos{pos.X, pos.Y}
+		switch move {
+		case 'l':
+			nextPos.X--
+		case 'r':
+			nextPos.X++
+		case 'u':
+			nextPos.Y++
+		case 'd':
+			nextPos.Y--
+		}
+
+		positions := connection.ReadStringFromConn(playerConn, make([]byte, 200))
+		_ = json.Unmarshal([]byte(positions), &gameMessage)
+		_ = json.Unmarshal([]byte(gameMessage.Data), &state2.Players)
+
+		if state2.Players[player.ID].Pos.X != nextPos.X || state2.Players[player.ID].Pos.Y != nextPos.Y {
+			fmt.Printf(
+				"Player could not move (%s) from Pos(%d, %d) to Pos(%d, %d): %s",
+				move, pos.X, pos.Y, nextPos.X, nextPos.Y, state.Maze,
+			)
+			continue
+		}
+
+		playerMoved = true
+		break
 	}
-	if pos != state.Players[player.ID].GetPos().X {
+
+	if !playerMoved {
 		panic(
 			fmt.Sprintf(
-				"Player was expected to move (%s) from pos (%d, %d) to pos (%d, %d)",
-				string(move),
+				"Player was expected to move from pos (%d, %d) : %s",
 				state.Players[player.ID].GetPos().X, state.Players[player.ID].GetPos().Y,
-				state2.Players[player.ID].GetPos().X, state2.Players[player.ID].GetPos().Y,
+				state.Maze,
 			),
 		)
 	}
 
-	// TODO: Move sure the computer player moved as well
+	//  Make sure the computer player moved as well
 	if state.Players[-1].GetPos().X == state2.Players[-1].GetPos().X && state.Players[-1].GetPos().Y == state2.Players[-1].GetPos().Y {
 		panic(
 			fmt.Sprintf(
