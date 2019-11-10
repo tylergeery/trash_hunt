@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-ozzo/ozzo-routing"
 	"github.com/go-ozzo/ozzo-routing/content"
-	"github.com/go-ozzo/ozzo-routing/cors"
 	"github.com/tylergeery/trash_hunt/api_server/controllers"
 	"github.com/tylergeery/trash_hunt/api_server/middleware"
 )
@@ -18,40 +17,23 @@ func health(c *routing.Context) error {
 func GetRouter() *routing.Router {
 	router := routing.New()
 
+	router.Use(middleware.LogRequest(), middleware.Cors())
 	router.Get(`/hello/<name:\w+>`, health)
 	router.Post(
 		"/login/",
-		middleware.LogRequest(),
 		content.TypeNegotiator(content.JSON),
-		cors.Handler(cors.Options{
-			AllowOrigins: "*",
-			AllowHeaders: "*",
-			AllowMethods: "*",
-		}),
 		controllers.PlayerLogin,
 	)
 	router.Post(
 		"/v1/player/",
-		middleware.LogRequest(),
 		content.TypeNegotiator(content.JSON),
-		cors.Handler(cors.Options{
-			AllowOrigins: "*",
-			AllowHeaders: "*",
-			AllowMethods: "*",
-		}),
 		controllers.PlayerCreate,
 	)
 
 	rg := router.Group("/v1")
 	rg.Use(
-		middleware.LogRequest(),
 		middleware.ValidateToken(),
 		content.TypeNegotiator(content.JSON),
-		cors.Handler(cors.Options{
-			AllowOrigins: "*",
-			AllowHeaders: "*",
-			AllowMethods: "*",
-		}),
 	)
 
 	rg.Put("/player/", controllers.PlayerUpdate)

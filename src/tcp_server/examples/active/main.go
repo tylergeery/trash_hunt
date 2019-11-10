@@ -47,9 +47,11 @@ func setupPlayer(player *model.Player) net.Conn {
 	}
 
 	// listen for reply
+	var gameMessage connection.GameMessage
 	message := connection.ReadStringFromConn(conn, make([]byte, 50))
+	_ = json.Unmarshal([]byte(message), &gameMessage)
 
-	if strings.TrimPrefix(message, "Status: ") != "Pending" {
+	if strings.TrimPrefix(gameMessage.Data, "Status: ") != "Pending" {
 		panic(fmt.Sprintf("Received something other than status pending: \n%s\n%s", string(message), strings.TrimPrefix(string(message), "Status: ")))
 	}
 
@@ -71,53 +73,78 @@ func main() {
 	defer player2Conn.Close()
 
 	// Wait for game to match
-	game1 := connection.ReadStringFromConn(player1Conn, make([]byte, 1500))
-	game2 := connection.ReadStringFromConn(player2Conn, make([]byte, 1500))
-	var state1 game.State
-	fmt.Println(game1)
-	json.Unmarshal([]byte(game1), &state1)
-	if game1 != game2 {
-		panic(fmt.Sprintf("Players were not paired for the same game: Player1 %s, Player2 %s", game1, game2))
+	str1 := connection.ReadStringFromConn(player1Conn, make([]byte, 1500))
+	str2 := connection.ReadStringFromConn(player2Conn, make([]byte, 1500))
+
+	var gameMessage1, gameMessage2 connection.GameMessage
+	_ = json.Unmarshal([]byte(str1), &gameMessage1)
+	_ = json.Unmarshal([]byte(str2), &gameMessage2)
+
+	if gameMessage1.Data != gameMessage2.Data {
+		panic(fmt.Sprintf("Players were not paired for the same game: Player1 %s, Player2 %s", gameMessage1.Data, gameMessage2.Data))
 	}
+
+	var state1, state2 game.State
+	_ = json.Unmarshal([]byte(gameMessage1.Data), &state1)
+	_ = json.Unmarshal([]byte(gameMessage2.Data), &state2)
 
 	// Move one character and ensure the other receives the move
-	move := 'l'
-	state1Player1 := state1.Players[player1.ID]
-	fmt.Println(state1.Players)
-	if state1Player1.GetPos().X == 0 {
-		move = 'r'
-	}
-	_, err := player1Conn.Write([]byte{byte(move)})
-	if err != nil {
-		panic(fmt.Sprintf("Error sending left move: %s", err))
-	}
-	positions1 := connection.ReadStringFromConn(player1Conn, make([]byte, 100))
-	positions2 := connection.ReadStringFromConn(player2Conn, make([]byte, 100))
-	state2 := game.State{
-		Players: make(map[int64]*game.Player),
-	}
-	fmt.Println(positions1)
-	json.Unmarshal([]byte(positions1), &state2.Players)
-	if positions1 != positions2 {
-		panic(
-			fmt.Sprintf(
-				"Players were not paired for the same game: Player1 %s, Player2 %s",
-				game1, game2,
-			),
-		)
+	moves := []byte("lrud")
+	playerMoved := false
+	pos := state2.Players[player1.ID].GetPos()
+	for _, move := range moves {
+		fmt.Println("move", string(move))
+		_, err := player1Conn.Write([]byte{move})
+		if err != nil {
+			panic(fmt.Sprintf("Error sending left move: %s", err))
+		}
+
+		nextPos := game.Pos{pos.X, pos.Y}
+		switch move {
+		case 'l':
+			nextPos.X--
+		case 'r':
+			nextPos.X++
+		case 'u':
+			nextPos.Y++
+		case 'd':
+			nextPos.Y--
+		}
+
+		positions1 := connection.ReadStringFromConn(player1Conn, make([]byte, 200))
+		positions2 := connection.ReadStringFromConn(player2Conn, make([]byte, 200))
+		_ = json.Unmarshal([]byte(positions1), &gameMessage1)
+		_ = json.Unmarshal([]byte(positions2), &gameMessage2)
+
+		_ = json.Unmarshal([]byte(gameMessage1.Data), &state1.Players)
+		_ = json.Unmarshal([]byte(gameMessage2.Data), &state2.Players)
+		if gameMessage1.Data != gameMessage2.Data {
+			panic(
+				fmt.Sprintf(
+					"Players did not received the same game updates: Player1 %s, Player2 %s",
+					gameMessage1.Data, gameMessage2.Data,
+				),
+			)
+		}
+
+		if state1.Players[player1.ID].Pos.X != nextPos.X || state1.Players[player1.ID].Pos.Y != nextPos.Y {
+			fmt.Printf(
+				"Player could not move (%s) from Pos(%d, %d) to Pos(%d, %d): %s",
+				move, pos.X, pos.Y, nextPos.X, nextPos.Y, state1.Maze,
+			)
+			continue
+		}
+
+		playerMoved = true
+		break
 	}
 
-	pos := state2.Players[player1.ID].GetPos().X + 1
-	if move == 'r' {
-		pos = state2.Players[player1.ID].GetPos().X - 1
-	}
-	if pos != state1.Players[player1.ID].GetPos().X {
+	if !playerMoved {
 		panic(
 			fmt.Sprintf(
-				"Player1 was expected to move (%s) from pos (%d, %d) to pos (%d, %d)",
-				string(move),
+				"Player1 was expected to move from pos (%d, %d) : %s",
 				state1.Players[player1.ID].GetPos().X, state1.Players[player1.ID].GetPos().Y,
-				state2.Players[player1.ID].GetPos().X, state2.Players[player1.ID].GetPos().Y,
+				state2.Maze,
 			),
 		)
 	}

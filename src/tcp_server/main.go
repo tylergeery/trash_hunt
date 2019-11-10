@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/tylergeery/trash_hunt/tcp_server/connection"
 )
 
@@ -39,6 +41,9 @@ func main() {
 
 	// TODO: make sure the manager will clean up lingering goroutines
 
+	// handle websocket connections
+	go acceptSocketConnections(manager)
+
 	// pass connections to pool
 	for {
 		conn, err := listener.AcceptTCP()
@@ -46,8 +51,51 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Connection accept error: %s", err.Error())
 			continue
 		}
-		manager.InitCh <- conn
+
+		// handle cleanup
+		conn.SetReadDeadline(time.Now().Add(10 * time.Minute)) // TODO: game duration
+		conn.SetKeepAlive(true)
+		defer conn.Close()
+
+		manager.InitCh <- connection.NewTCPConnection(conn)
 	}
+}
+
+func acceptSocketConnections(manager *connection.Manager) {
+	upgrader := websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Socket request received")
+		upgrader.CheckOrigin = func(r *http.Request) bool {
+			return true
+		}
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			fmt.Printf("Socket upgrade error: %s", err.Error())
+			return
+		}
+
+		connOpen := true
+		conn.SetCloseHandler(func(code int, text string) error {
+			connOpen = false
+			return nil
+		})
+		conn.SetReadDeadline(time.Now().Add(10 * time.Minute)) // TODO: game duration
+		defer conn.Close()
+
+		manager.InitCh <- connection.NewSocketConnection(conn)
+
+		for connOpen {
+			// TODO: DO better
+			time.Sleep(10 * time.Millisecond)
+		}
+		fmt.Println("Letting go of websocket connection")
+	}
+
+	http.HandleFunc("/", handler)
+	http.ListenAndServe(":8081", nil)
 }
 
 func handleConnection(manager *connection.Manager) {
@@ -59,16 +107,12 @@ func handleConnection(manager *connection.Manager) {
 	}
 }
 
-func handleClient(conn *net.TCPConn, manager *connection.Manager) {
-	conn.SetReadDeadline(time.Now().Add(10 * time.Minute)) // TODO: game duration
-	conn.SetKeepAlive(true)
-	defer conn.Close()
-
+func handleClient(conn connection.Connection, manager *connection.Manager) {
 	// Try to turn connection into game player
 	client := connection.NewClient(conn)
 	err := client.SetUpUser()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, err.Error())
+		fmt.Fprintf(os.Stderr, "Could not create TCP Client: %s", err.Error())
 		return
 	}
 
