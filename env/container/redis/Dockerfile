@@ -1,1 +1,2 @@
-USER 1005
+RUN useradd -ms /bin/bash user
+USER user
