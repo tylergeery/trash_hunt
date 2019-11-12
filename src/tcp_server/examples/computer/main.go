@@ -82,7 +82,6 @@ func main() {
 	playerMoved := false
 	pos := state.Players[player.ID].GetPos()
 	for _, move := range moves {
-		fmt.Println("move", string(move))
 		_, err := playerConn.Write([]byte{move})
 		if err != nil {
 			panic(fmt.Sprintf("Error sending left move: %s", err))
@@ -95,9 +94,9 @@ func main() {
 		case 'r':
 			nextPos.X++
 		case 'u':
-			nextPos.Y++
-		case 'd':
 			nextPos.Y--
+		case 'd':
+			nextPos.Y++
 		}
 
 		positions := connection.ReadStringFromConn(playerConn, make([]byte, 200))
