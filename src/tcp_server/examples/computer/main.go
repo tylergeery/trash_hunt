@@ -106,8 +106,8 @@ func main() {
 
 		if state2.Players[player.ID].Pos.X != nextPos.X || state2.Players[player.ID].Pos.Y != nextPos.Y {
 			fmt.Printf(
-				"Player could not move (%s) from Pos(%d, %d) to Pos(%d, %d): %s",
-				move, pos.X, pos.Y, nextPos.X, nextPos.Y, state.Maze,
+				"Player could not move (%s) from Pos(%d, %d) to Pos(%d, %d): %+v",
+				string(move), pos.X, pos.Y, nextPos.X, nextPos.Y, state.Maze,
 			)
 			continue
 		}
@@ -119,7 +119,7 @@ func main() {
 	if !playerMoved {
 		panic(
 			fmt.Sprintf(
-				"Player was expected to move from pos (%d, %d) : %s",
+				"Player was expected to move from pos (%d, %d) : %+v",
 				state.Players[player.ID].GetPos().X, state.Players[player.ID].GetPos().Y,
 				state.Maze,
 			),
