@@ -113,22 +113,34 @@ func TestMoveUser(t *testing.T) {
 	p2 := NewPlayer(11)
 	state := NewState(p1, p2)
 
-	p1.setPos(Pos{0, 0})
-	p2.setPos(Pos{9, 9})
-
-	if state.MoveUser(p1.ID, Pos{1, 1}) {
-		t.Fatalf("User should not be able to move from (%d, %d) to (1, 1)", p1.Pos.X, p1.Pos.Y)
+	type TestCase struct {
+		player   *Player
+		orig     Pos
+		next     Pos
+		expected Pos
+		result   bool
+	}
+	cases := []TestCase{
+		TestCase{p1, Pos{0, 0}, Pos{1, 1}, Pos{0, 0}, false},
+		TestCase{p1, Pos{0, 0}, Pos{0, 1}, Pos{0, 1}, true},
+		TestCase{p2, Pos{9, 9}, Pos{9, 8}, Pos{9, 8}, true},
+		TestCase{p2, Pos{9, 9}, Pos{3, 3}, Pos{9, 9}, false},
 	}
 
-	if !state.MoveUser(p1.ID, Pos{1, 0}) {
-		t.Fatalf("User was expected to move from (%d, %d) to (1, 0)", p1.Pos.X, p1.Pos.Y)
-	}
+	for _, c := range cases {
+		c.player.setPos(c.orig)
+		if state.MoveUser(c.player.ID, c.next) != c.result {
+			t.Fatalf(
+				"User moving from %+v to %+v, did not received expected result: %t",
+				c.orig, c.next, c.result,
+			)
+		}
 
-	if state.MoveUser(p2.ID, Pos{3, 3}) {
-		t.Fatalf("User should not be able to move from (%d, %d) to (3, 3)", p1.Pos.X, p1.Pos.Y)
-	}
-
-	if !state.MoveUser(p2.ID, Pos{9, 8}) {
-		t.Fatalf("User was expected to move from (%d, %d) to (9, 8)", p1.Pos.X, p1.Pos.Y)
+		if c.player.Pos.X != c.expected.X || c.player.Pos.Y != c.expected.Y {
+			t.Fatalf(
+				"User moving from %+v to %+v, did not end at expected %+v, but instead %+v",
+				c.orig, c.next, c.expected, c.player.Pos,
+			)
+		}
 	}
 }
