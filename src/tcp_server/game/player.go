@@ -26,7 +26,6 @@ func (p *Player) GetPos() Pos {
 	return p.Pos
 }
 
-// SetPos sets new player Pos
-func (p *Player) SetPos(pos Pos) {
+func (p *Player) setPos(pos Pos) {
 	p.Pos = pos
 }

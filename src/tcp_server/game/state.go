@@ -27,12 +27,12 @@ func NewState(player1, player2 *Player) *State {
 	s.Maze.TrashPos.Y = 9
 	s.Players = make(map[int64]*Player)
 	s.Players[player1.GetID()] = player1
-	player1.SetPos(Pos{
+	player1.setPos(Pos{
 		X: rand.Intn(gameBoardSize),
 		Y: rand.Intn(gameBoardSize),
 	})
 	s.Players[player2.GetID()] = player2
-	player2.SetPos(Pos{
+	player2.setPos(Pos{
 		X: rand.Intn(gameBoardSize),
 		Y: rand.Intn(gameBoardSize),
 	})
@@ -83,11 +83,11 @@ func (s *State) PlayerCanFinish(player *Player, outcomes map[string]bool, visite
 
 	originalPos := player.GetPos()
 	defer func() {
-		player.SetPos(originalPos)
+		player.setPos(originalPos)
 	}()
 
 	for _, pos := range s.findAvailableMoves(player, visited) {
-		player.SetPos(pos)
+		player.setPos(pos)
 		key := fmt.Sprintf("%d-%d", pos.X, pos.Y)
 		visited = append(visited, Pos{pos.X, pos.Y})
 
@@ -150,13 +150,16 @@ func (s *State) findAvailableMoves(player *Player, visited []Pos) []Pos {
 }
 
 // MoveUser changes the current position of a user to the nextPos
-// TODO: Test
-func (s *State) MoveUser(playerID int64, nextPos Pos) {
+func (s *State) MoveUser(playerID int64, nextPos Pos) bool {
 	player := s.Players[playerID]
 
-	if s.Maze.CanMoveBetween(player.GetPos(), nextPos) {
-		player.SetPos(nextPos)
+	if !s.Maze.CanMoveBetween(player.GetPos(), nextPos) {
+		return false
 	}
+
+	player.setPos(nextPos)
+
+	return true
 }
 
 func hasVisited(pos Pos, visited []Pos) bool {

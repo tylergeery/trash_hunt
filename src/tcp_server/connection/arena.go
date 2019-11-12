@@ -2,7 +2,6 @@ package connection
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/tylergeery/trash_hunt/tcp_server/game"
 )
@@ -24,24 +23,16 @@ func NewArena(p1, p2 *game.Player, clients ...*Client) *Arena {
 func (a *Arena) start(matchID int64, moveChan chan Move) {
 	// TODO: DO better than this, this will race
 	for i := range a.clients {
-		if a.clients[i] == nil {
-			continue
-		}
-
 		a.clients[i].matchID = matchID
 		a.clients[i].moveChan = moveChan
 	}
 
-	a.notifyClients(1)
+	a.notifyClients(moveStartGame)
 	a.sendInitialState()
 }
 
 func (a *Arena) notifyClients(move int) {
 	for i := range a.clients {
-		if a.clients[i] == nil {
-			continue
-		}
-
 		a.clients[i].notifications <- move
 	}
 }
@@ -56,10 +47,12 @@ func (a *Arena) sendInitialState() {
 	}
 }
 
-// MoveUser changes the current position of a user to the nextPos
-// TODO: Test
-func (a *Arena) MoveUser(playerID int64, nextPos game.Pos) {
-	a.state.MoveUser(playerID, nextPos)
+func (a *Arena) moveUser(playerID int64, nextPos game.Pos) {
+	moved := a.state.MoveUser(playerID, nextPos)
+	if !moved {
+		return
+	}
+
 	difficulty := 1
 	for id := range a.state.Players {
 		if id == playerID {
@@ -68,21 +61,16 @@ func (a *Arena) MoveUser(playerID int64, nextPos game.Pos) {
 		if id == -1 {
 			// move computer player (as response)
 			solver := NewSolver(difficulty)
-			a.state.MoveUser(-1, solver.GetMove(-1, a.state))
+			_ = a.state.MoveUser(-1, solver.GetMove(-1, a.state))
 		}
 	}
 }
 
 func (a *Arena) sendPositions() {
 	message, _ := json.Marshal(a.state.Players)
-	fmt.Printf("Arena: sending positions: %s", message)
 	positions := string(message)
 
 	for i := range a.clients {
-		if a.clients[i] == nil {
-			continue
-		}
-
 		msg := NewGameMessage(messageUpdateGameState, positions)
 		a.clients[i].conn.respond(msg)
 	}

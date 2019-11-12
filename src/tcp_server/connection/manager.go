@@ -51,7 +51,7 @@ func (m *Manager) waitForEvents() {
 				continue
 			}
 
-			arena.MoveUser(move.playerID, move.pos)
+			arena.moveUser(move.playerID, move.pos)
 			arena.sendPositions()
 		}
 	}

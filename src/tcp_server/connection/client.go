@@ -15,6 +15,8 @@ var (
 	messageError           = 1
 	messageInitGame        = 2
 	messageUpdateGameState = 3
+
+	moveStartGame = 1
 )
 
 // GameMessage is event sent to client through connection
@@ -172,7 +174,7 @@ func (c *Client) WaitForStart() {
 
 	select {
 	case move := <-c.notifications:
-		if move == 1 {
+		if move == moveStartGame {
 			// game start move
 			c.processGame()
 

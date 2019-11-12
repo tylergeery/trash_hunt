@@ -107,3 +107,28 @@ func TestFindAvailableMoves(t *testing.T) {
 		}
 	}
 }
+
+func TestMoveUser(t *testing.T) {
+	p1 := NewPlayer(3)
+	p2 := NewPlayer(11)
+	state := NewState(p1, p2)
+
+	p1.setPos(Pos{0, 0})
+	p2.setPos(Pos{9, 9})
+
+	if state.MoveUser(p1.ID, Pos{1, 1}) {
+		t.Fatalf("User should not be able to move from (%d, %d) to (1, 1)", p1.Pos.X, p1.Pos.Y)
+	}
+
+	if !state.MoveUser(p1.ID, Pos{1, 0}) {
+		t.Fatalf("User was expected to move from (%d, %d) to (1, 0)", p1.Pos.X, p1.Pos.Y)
+	}
+
+	if state.MoveUser(p2.ID, Pos{3, 3}) {
+		t.Fatalf("User should not be able to move from (%d, %d) to (3, 3)", p1.Pos.X, p1.Pos.Y)
+	}
+
+	if !state.MoveUser(p2.ID, Pos{9, 8}) {
+		t.Fatalf("User was expected to move from (%d, %d) to (9, 8)", p1.Pos.X, p1.Pos.Y)
+	}
+}
