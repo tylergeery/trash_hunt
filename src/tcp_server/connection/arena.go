@@ -53,15 +53,14 @@ func (a *Arena) moveUser(playerID int64, nextPos game.Pos) {
 		return
 	}
 
-	difficulty := 1
 	for id := range a.state.Players {
 		if id == playerID {
 			continue
 		}
-		if id == -1 {
+		if id < 0 {
 			// move computer player (as response)
-			solver := NewSolver(difficulty)
-			_ = a.state.MoveUser(-1, solver.GetMove(-1, a.state))
+			nextMove := a.state.Players[id].Solver.GetMove(id, a.state)
+			_ = a.state.MoveUser(id, nextMove)
 		}
 	}
 }

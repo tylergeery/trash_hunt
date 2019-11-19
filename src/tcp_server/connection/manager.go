@@ -60,7 +60,7 @@ func (m *Manager) waitForEvents() {
 func (m *Manager) addPending(client *Client) *Manager {
 	// Check if user wants to play computer
 	if client.preferences.Opponent == -1 {
-		m.createMatch(client, nil)
+		m.createMatch(client, nil, 1)
 	}
 
 	m.pending[client.player.ID] = client
@@ -84,7 +84,7 @@ func (m *Manager) endMatch(matchID int64) *Manager {
 	return m
 }
 
-func (m *Manager) createMatch(client1, client2 *Client) bool {
+func (m *Manager) createMatch(client1, client2 *Client, difficulty int) bool {
 	var arena *Arena
 	var match *model.Game
 	var err error
@@ -92,6 +92,8 @@ func (m *Manager) createMatch(client1, client2 *Client) bool {
 	if client2 == nil {
 		// Create Computer
 		computer := game.NewPlayer(-1)
+		computer.Solver = game.NewSolver(difficulty)
+
 		arena = NewArena(client1.player, computer, client1)
 		match, err = model.CreateNewGame(client1.player.ID, -1)
 	} else {
@@ -119,7 +121,6 @@ func (m *Manager) createMatch(client1, client2 *Client) bool {
 
 // Match takes pending players and creates matches
 func (m *Manager) match() *Manager {
-	fmt.Println("Manager: trying to match")
 	playersByDifficulty := map[string][]int64{}
 
 	for k := range m.pending {
@@ -133,7 +134,7 @@ func (m *Manager) match() *Manager {
 		for len(playersByDifficulty[d]) > 1 {
 			client1, _ := m.pending[playersByDifficulty[d][0]]
 			client2, _ := m.pending[playersByDifficulty[d][1]]
-			success := m.createMatch(client1, client2)
+			success := m.createMatch(client1, client2, 1)
 			if !success {
 				continue
 			}

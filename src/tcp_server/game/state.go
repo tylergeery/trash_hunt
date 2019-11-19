@@ -12,6 +12,7 @@ const gameBoardSize = 10
 type State struct {
 	Players map[int64]*Player `json:"players"`
 	Maze    *Maze             `json:"maze"`
+	done    bool
 }
 
 // NewState sets new maze and player/trash pos for gameplay
@@ -76,7 +77,6 @@ func (s *State) IsValid() bool {
 
 // PlayerCanFinish - can the given player finish?
 func (s *State) PlayerCanFinish(player *Player, outcomes map[string]bool, visited []Pos) bool {
-	// fmt.Printf("Player can finish (%d, %d), trash (%d, %d)\n", player.Pos.X, player.Pos.Y, s.Maze.TrashPos.X, s.Maze.TrashPos.Y)
 	if player.GetPos().X == s.Maze.TrashPos.X && player.GetPos().Y == s.Maze.TrashPos.Y {
 		return true
 	}
@@ -151,6 +151,10 @@ func (s *State) findAvailableMoves(player *Player, visited []Pos) []Pos {
 
 // MoveUser changes the current position of a user to the nextPos
 func (s *State) MoveUser(playerID int64, nextPos Pos) bool {
+	if s.done {
+		return false
+	}
+
 	player := s.Players[playerID]
 
 	if !s.Maze.CanMoveBetween(player.GetPos(), nextPos) {
@@ -158,8 +162,35 @@ func (s *State) MoveUser(playerID int64, nextPos Pos) bool {
 	}
 
 	player.setPos(nextPos)
+	if s.hasWon(player.ID) {
+		s.done = true
+	}
 
 	return true
+}
+
+// GetWinner of game
+func (s *State) GetWinner() int64 {
+	if !s.done {
+		return 0
+	}
+
+	for id := range s.Players {
+		if s.hasWon(id) {
+			return id
+		}
+	}
+
+	return 0
+}
+
+func (s *State) hasWon(playerID int64) bool {
+	pos := s.Players[playerID].Pos
+	if pos.X == s.Maze.TrashPos.X && pos.Y == s.Maze.TrashPos.Y {
+		return true
+	}
+
+	return false
 }
 
 func hasVisited(pos Pos, visited []Pos) bool {

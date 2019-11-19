@@ -41,7 +41,7 @@ func (c *TCPConnection) respond(msg GameMessage) error {
 	message := msg.ToBytes()
 	_, err := c.conn.Write(message)
 	if err != nil {
-		fmt.Printf("Client: error sending response: %s\n", string(message))
+		fmt.Printf("TCPConnection: error sending response: %s\n", string(message))
 	}
 
 	return err

@@ -1,7 +1,5 @@
 package game
 
-import "fmt"
-
 // Maze handles all the information related to the game maze
 type Maze struct {
 	TrashPos Pos        `json:"trashPos"`
@@ -41,7 +39,6 @@ func NewMaze() *Maze {
 }
 
 func (m *Maze) revert() {
-	fmt.Printf("Removing wall from recent: %d\n", m.recent)
 	m.removeWalls(m.recent)
 }
 
