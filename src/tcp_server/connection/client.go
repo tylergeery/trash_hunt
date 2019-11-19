@@ -98,7 +98,6 @@ func (c *Client) SetUpUser() error {
 	}
 
 	c.preferences = gameSetUp
-	fmt.Println(gameSetUp)
 	playerID, err := auth.GetPlayerIDFromAccessToken(strings.TrimRight(gameSetUp.UserToken, " \n\t"))
 	fmt.Printf("Client: token %s\n", gameSetUp.UserToken)
 	if err != nil {

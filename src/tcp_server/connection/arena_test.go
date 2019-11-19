@@ -2,6 +2,7 @@ package connection
 
 import (
 	"testing"
+	"time"
 
 	"github.com/tylergeery/trash_hunt/tcp_server/game"
 )
@@ -27,7 +28,7 @@ func TestArena(t *testing.T) {
 	p2 := game.NewPlayer(150)
 	clients := []*Client{}
 	clientCount := 3
-	notificationChannel := make(chan int, clientCount+1)
+	notificationChannel := make(chan int, 3)
 
 	for i := 0; i < clientCount; i++ {
 		client := NewClient(&MockConnection{})
@@ -50,7 +51,7 @@ func TestArena(t *testing.T) {
 		}
 	}
 
-	// TODO: race condition
+	time.Sleep(2 * time.Second)
 	if len(notificationChannel) != 3 {
 		t.Fatalf("Expected all clients to notified of start game")
 	}
