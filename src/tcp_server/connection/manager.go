@@ -75,11 +75,9 @@ func (m *Manager) removePending(client *Client) *Manager {
 }
 
 func (m *Manager) endMatch(matchID int64) *Manager {
-	_, _ = m.active[matchID]
-
-	// cleanup
-
 	delete(m.active, matchID)
+
+	// notify clients that game is over
 
 	return m
 }
