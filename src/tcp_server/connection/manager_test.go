@@ -28,6 +28,8 @@ func TestManagerCreatesMatches(t *testing.T) {
 	}
 	manager.PendingCh <- client
 
+	// TODO: listen on notifications for manager matching
+	// do not expect things synchronously
 	// if len(manager.active) != 1 {
 	// 	t.Fatalf("Manager did not create expected easy match: %d, pending: %d", len(manager.active), len(manager.pending))
 	// }

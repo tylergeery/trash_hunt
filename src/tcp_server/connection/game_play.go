@@ -13,8 +13,8 @@ var (
 	messageInitGame        = 2
 	messageUpdateGameState = 3
 
-	moveStartGame = 1
-	moveEndGame   = 2
+	eventStartGame = 1
+	eventEndGame   = 2
 )
 
 // GameMessage is event sent to client through connection

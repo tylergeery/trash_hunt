@@ -57,9 +57,9 @@ func TestArena(t *testing.T) {
 	}
 
 	close(notificationChannel)
-	for move := range notificationChannel {
-		if move != moveStartGame {
-			t.Fatalf("Client got unexpected notification: %d", move)
+	for event := range notificationChannel {
+		if event != eventStartGame {
+			t.Fatalf("Client got unexpected notification: %d", event)
 		}
 	}
 }

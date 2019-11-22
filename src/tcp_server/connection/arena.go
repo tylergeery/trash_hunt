@@ -27,7 +27,7 @@ func (a *Arena) start(matchID int64, moveChan chan Move) {
 		a.clients[i].moveChan = moveChan
 	}
 
-	a.notifyClients(moveStartGame)
+	a.notifyClients(eventStartGame)
 	a.sendInitialState()
 }
 

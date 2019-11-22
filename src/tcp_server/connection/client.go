@@ -14,8 +14,8 @@ import (
 type Client struct {
 	conn          Connection
 	matchID       int64
-	moveChan      chan Move
-	notifications chan int
+	moveChan      chan Move // For sending moves to manager
+	notifications chan int  // For receiving events from manager/arena
 	player        *game.Player
 	preferences   GameSetUp
 }
@@ -79,32 +79,30 @@ func (c *Client) GetMove() (string, error) {
 
 func (c *Client) processGame() {
 	for {
+		var pos game.Pos
 		fmt.Println("Client: processing game...")
-		move, err := c.conn.gatherInput(make([]byte, 5))
+		clientMove, err := c.conn.gatherInput(make([]byte, 5))
 		if err != nil {
 			fmt.Printf("Client: ending game, %s\n", err)
 			return
 		}
 
-		switch move {
+		switch clientMove {
 		case "l":
-			pos := game.Pos{X: c.player.Pos.X - 1, Y: c.player.Pos.Y}
-			move := NewMove(pos, c.matchID, c.player.ID)
-			c.moveChan <- move
+			pos = game.Pos{X: c.player.Pos.X - 1, Y: c.player.Pos.Y}
 		case "r":
-			pos := game.Pos{X: c.player.Pos.X + 1, Y: c.player.Pos.Y}
-			move := NewMove(pos, c.matchID, c.player.ID)
-			c.moveChan <- move
+			pos = game.Pos{X: c.player.Pos.X + 1, Y: c.player.Pos.Y}
 		case "u":
-			pos := game.Pos{X: c.player.Pos.X, Y: c.player.Pos.Y - 1}
-			move := NewMove(pos, c.matchID, c.player.ID)
-			c.moveChan <- move
+			pos = game.Pos{X: c.player.Pos.X, Y: c.player.Pos.Y - 1}
 		case "d":
-			pos := game.Pos{X: c.player.Pos.X, Y: c.player.Pos.Y + 1}
-			move := NewMove(pos, c.matchID, c.player.ID)
-			c.moveChan <- move
+			pos = game.Pos{X: c.player.Pos.X, Y: c.player.Pos.Y + 1}
+		default:
+			fmt.Printf("Client: unknown move: %s", clientMove)
+			continue
 		}
 
+		move := NewMove(pos, c.matchID, c.player.ID)
+		c.moveChan <- move
 	}
 }
 
@@ -118,15 +116,16 @@ func (c *Client) WaitForStart() {
 		return
 	}
 
-	select {
-	case move := <-c.notifications:
-		if move == moveStartGame {
-			// game start move
-			c.processGame()
+	defer func() {
+		fmt.Println("Client: game finished")
+	}()
 
-			return
+	select {
+	case event := <-c.notifications:
+		if event == eventStartGame {
+			c.processGame()
 		}
-		fmt.Printf("Client: Received move before game started (%s)\n", string(move))
+
+		fmt.Printf("Client: Received move before game started (%s)\n", string(event))
 	}
-	fmt.Println("Client: game finished")
 }
