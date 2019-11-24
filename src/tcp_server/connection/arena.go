@@ -21,6 +21,8 @@ func NewArena(p1, p2 *game.Player, clients ...*Client) *Arena {
 }
 
 func (a *Arena) start(matchID int64, moveChan chan Move) {
+	a.state.StartWithDifficulty(10)
+
 	// TODO: DO better than this, this will race
 	for i := range a.clients {
 		a.clients[i].matchID = matchID

@@ -104,12 +104,9 @@ func (m *Manager) createMatch(client1, client2 *Client, difficulty int) bool {
 		return false
 	}
 
-	arena.state.StartWithDifficulty(10)
-	fmt.Printf("Manager: created game (%d)\n", match.ID)
-
 	arena.start(match.ID, m.ActiveCh)
 
-	fmt.Printf("Manager: done notifying clients\n")
+	fmt.Printf("Manager: created game (%d)\n", match.ID)
 
 	// update manager's records
 	m.active[match.ID] = arena
@@ -122,7 +119,6 @@ func (m *Manager) match() *Manager {
 	playersByDifficulty := map[string][]int64{}
 
 	for k := range m.pending {
-
 		diff := m.pending[k].preferences.Difficulty
 		playersByDifficulty[diff] = append(playersByDifficulty[diff], k)
 	}
