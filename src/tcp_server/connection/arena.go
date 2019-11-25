@@ -3,12 +3,14 @@ package connection
 import (
 	"encoding/json"
 
+	"github.com/tylergeery/trash_hunt/model"
 	"github.com/tylergeery/trash_hunt/tcp_server/game"
 )
 
 // Arena holds all the information about clients and the active game
 type Arena struct {
 	state   *game.State
+	match   *model.Game
 	clients []*Client
 }
 
@@ -20,12 +22,13 @@ func NewArena(p1, p2 *game.Player, clients ...*Client) *Arena {
 	}
 }
 
-func (a *Arena) start(matchID int64, moveChan chan Move) {
+func (a *Arena) start(match *model.Game, moveChan chan Move) {
+	a.match = match
 	a.state.StartWithDifficulty(10)
 
 	// TODO: DO better than this, this will race
 	for i := range a.clients {
-		a.clients[i].matchID = matchID
+		a.clients[i].matchID = match.ID
 		a.clients[i].moveChan = moveChan
 	}
 

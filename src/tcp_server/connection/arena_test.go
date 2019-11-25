@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tylergeery/trash_hunt/model"
 	"github.com/tylergeery/trash_hunt/tcp_server/game"
 )
 
@@ -41,8 +42,11 @@ func TestArena(t *testing.T) {
 		}()
 	}
 
+	match := &model.Game{
+		ID: 100,
+	}
 	arena := NewArena(p1, p2, clients...)
-	arena.start(100, make(chan Move, 10))
+	arena.start(match, make(chan Move, 10))
 
 	for i := range clients {
 		conn := clients[i].conn.(*MockConnection)

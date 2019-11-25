@@ -131,7 +131,7 @@ func (s *State) findAvailableMoves(player *Player) []Pos {
 			continue
 		}
 
-		if next.Y < 0 || next.Y > gameBoardSize {
+		if next.X < 0 || next.X > gameBoardSize {
 			continue
 		}
 
