@@ -93,8 +93,7 @@ func TestFindAvailableMoves(t *testing.T) {
 
 	for _, test := range testCases {
 		p1.Pos = test.p
-		visited := []Pos{}
-		moves := state.findAvailableMoves(p1, visited)
+		moves := state.findAvailableMoves(p1)
 
 		if len(moves) != len(test.exp) {
 			t.Fatalf("Moves had len: %d, but expected length: %d", len(moves), len(test.exp))

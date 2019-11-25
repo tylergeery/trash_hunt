@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/tylergeery/trash_hunt/tcp_server/game"
 )
@@ -58,6 +59,7 @@ func TestManagerCreatesMatches(t *testing.T) {
 
 	wg.Wait()
 
+	time.Sleep(1 * time.Second)
 	if len(manager.active) != 1 {
 		t.Fatalf("Manager did not create expected easy match: %d, pending: %d", len(manager.active), len(manager.pending))
 	}
