@@ -127,11 +127,11 @@ func (s *State) findAvailableMoves(player *Player) []Pos {
 	}
 
 	for _, next := range possibles {
-		if next.Y < 0 || next.Y > gameBoardSize {
+		if next.Y < 0 || next.Y >= gameBoardSize {
 			continue
 		}
 
-		if next.X < 0 || next.X > gameBoardSize {
+		if next.X < 0 || next.X >= gameBoardSize {
 			continue
 		}
 
