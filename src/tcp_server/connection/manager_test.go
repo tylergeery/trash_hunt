@@ -78,7 +78,6 @@ func TestManagerEndsMatch(t *testing.T) {
 	client.player = player1
 	arena := NewArena(player1, player2, client)
 	match, _ := model.CreateNewGame(player1.ID, player2.ID)
-	fmt.Println("Created match:", match.ID)
 	arena.match = match
 	manager.active[match.ID] = arena
 	client.matchID = match.ID
@@ -107,7 +106,7 @@ func TestManagerEndsMatch(t *testing.T) {
 		t.Fatalf("Game status (%d) was not expected (%d)", game.Status, model.GameStatusComplete)
 	}
 
-	if game.EndedAt.Unix() >= endTime.Unix() {
+	if game.EndedAt.Unix() < endTime.Unix() {
 		t.Fatalf("Game time (%s) was not >= expected (%s)", game.EndedAt, endTime)
 	}
 }

@@ -2,6 +2,7 @@ package connection
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/tylergeery/trash_hunt/model"
 	"github.com/tylergeery/trash_hunt/tcp_server/game"
@@ -83,6 +84,8 @@ func (m *Manager) endMatch(client *Client) *Manager {
 	// end game, assigning winner and loser
 	arena.match.Status = model.GameStatusComplete
 	arena.match.LoserID = client.player.ID
+	arena.match.EndedAt = time.Now()
+
 	for i := range arena.state.Players {
 		if arena.state.Players[i].ID != client.player.ID {
 			arena.match.WinnerID = arena.state.Players[i].ID
