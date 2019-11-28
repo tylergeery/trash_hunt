@@ -2,6 +2,7 @@ package connection
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/tylergeery/trash_hunt/model"
 	"github.com/tylergeery/trash_hunt/tcp_server/game"
@@ -42,7 +43,7 @@ func (m *Manager) waitForEvents() {
 			m.addPending(client).match()
 		case client := <-m.ExitCh:
 			fmt.Printf("Manager: removing client:(%d)\n", client.player.ID)
-			m.removePending(client).endMatch(client.matchID)
+			m.removePending(client).endMatch(client)
 		case move := <-m.ActiveCh:
 			fmt.Printf("Manager: got move from client: (%d) (%d, %d)\n", move.playerID, move.pos.X, move.pos.Y)
 			arena, ok := m.active[move.matchID]
@@ -74,10 +75,26 @@ func (m *Manager) removePending(client *Client) *Manager {
 	return m
 }
 
-func (m *Manager) endMatch(matchID int64) *Manager {
-	delete(m.active, matchID)
+func (m *Manager) endMatch(client *Client) *Manager {
+	arena, ok := m.active[client.matchID]
+	if !ok {
+		return m
+	}
 
-	// notify clients that game is over
+	// end game, assigning winner and loser
+	arena.match.Status = model.GameStatusComplete
+	arena.match.LoserID = client.player.ID
+	arena.match.EndedAt = time.Now()
+
+	for i := range arena.state.Players {
+		if arena.state.Players[i].ID != client.player.ID {
+			arena.match.WinnerID = arena.state.Players[i].ID
+			break
+		}
+	}
+	arena.match.Save()
+
+	delete(m.active, client.matchID)
 
 	return m
 }
@@ -104,7 +121,7 @@ func (m *Manager) createMatch(client1, client2 *Client, difficulty int) bool {
 		return false
 	}
 
-	arena.start(match.ID, m.ActiveCh)
+	arena.start(match, m.ActiveCh)
 
 	fmt.Printf("Manager: created game (%d)\n", match.ID)
 
