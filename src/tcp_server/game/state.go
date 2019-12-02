@@ -12,6 +12,7 @@ const gameBoardSize = 10
 type State struct {
 	Players map[int64]*Player `json:"players"`
 	Maze    *Maze             `json:"maze"`
+	done    bool
 }
 
 // NewState sets new maze and player/trash pos for gameplay
@@ -27,12 +28,12 @@ func NewState(player1, player2 *Player) *State {
 	s.Maze.TrashPos.Y = 9
 	s.Players = make(map[int64]*Player)
 	s.Players[player1.GetID()] = player1
-	player1.SetPos(Pos{
+	player1.setPos(Pos{
 		X: rand.Intn(gameBoardSize),
 		Y: rand.Intn(gameBoardSize),
 	})
 	s.Players[player2.GetID()] = player2
-	player2.SetPos(Pos{
+	player2.setPos(Pos{
 		X: rand.Intn(gameBoardSize),
 		Y: rand.Intn(gameBoardSize),
 	})
@@ -76,20 +77,23 @@ func (s *State) IsValid() bool {
 
 // PlayerCanFinish - can the given player finish?
 func (s *State) PlayerCanFinish(player *Player, outcomes map[string]bool, visited []Pos) bool {
-	// fmt.Printf("Player can finish (%d, %d), trash (%d, %d)\n", player.Pos.X, player.Pos.Y, s.Maze.TrashPos.X, s.Maze.TrashPos.Y)
 	if player.GetPos().X == s.Maze.TrashPos.X && player.GetPos().Y == s.Maze.TrashPos.Y {
 		return true
 	}
 
 	originalPos := player.GetPos()
 	defer func() {
-		player.SetPos(originalPos)
+		player.setPos(originalPos)
 	}()
 
-	for _, pos := range s.findAvailableMoves(player, visited) {
-		player.SetPos(pos)
+	for _, pos := range s.findAvailableMoves(player) {
+		if hasVisited(pos, visited) {
+			continue
+		}
+
+		player.setPos(pos)
 		key := fmt.Sprintf("%d-%d", pos.X, pos.Y)
-		visited = append(visited, Pos{pos.X, pos.Y})
+		visited = append(visited, pos)
 
 		if success, ok := outcomes[key]; ok {
 			return success
@@ -108,55 +112,82 @@ func (s *State) PlayerCanFinish(player *Player, outcomes map[string]bool, visite
 	return false
 }
 
+// GetAvailableMoves return positions available for given playerID
 func (s *State) GetAvailableMoves(playerID int64) []Pos {
-	visited := []Pos{}
-
-	return s.findAvailableMoves(s.Players[playerID], visited)
+	return s.findAvailableMoves(s.Players[playerID])
 }
 
-func (s *State) findAvailableMoves(player *Player, visited []Pos) []Pos {
+func (s *State) findAvailableMoves(player *Player) []Pos {
 	positions := []Pos{}
-	next := Pos{player.GetPos().X, player.GetPos().Y}
-
-	// can player go up?
-	next.Y = player.GetPos().Y - 1
-	if next.Y >= 0 && s.Maze.CanMoveBetween(player.GetPos(), next) && !hasVisited(next, visited) {
-		positions = append(positions, Pos{next.X, next.Y})
+	possibles := []Pos{
+		Pos{player.GetPos().X, player.GetPos().Y - 1}, // up
+		Pos{player.GetPos().X + 1, player.GetPos().Y}, // right
+		Pos{player.GetPos().X, player.GetPos().Y + 1}, // down
+		Pos{player.GetPos().X - 1, player.GetPos().Y}, // left
 	}
-	next.Y = player.GetPos().Y
 
-	// can player go right?
-	next.X = player.GetPos().X + 1
-	if next.X < gameBoardSize && s.Maze.CanMoveBetween(player.GetPos(), next) && !hasVisited(next, visited) {
-		positions = append(positions, Pos{next.X, next.Y})
-	}
-	next.X = player.GetPos().X
+	for _, next := range possibles {
+		if next.Y < 0 || next.Y >= gameBoardSize {
+			continue
+		}
 
-	// can player go down?
-	next.Y = player.GetPos().Y + 1
-	if next.Y < gameBoardSize && s.Maze.CanMoveBetween(player.GetPos(), next) && !hasVisited(next, visited) {
-		positions = append(positions, Pos{next.X, next.Y})
-	}
-	next.Y = player.GetPos().Y
+		if next.X < 0 || next.X >= gameBoardSize {
+			continue
+		}
 
-	// can player go left?
-	next.X = player.GetPos().X - 1
-	if player.GetPos().X >= 0 && s.Maze.CanMoveBetween(player.GetPos(), next) && !hasVisited(next, visited) {
-		positions = append(positions, Pos{next.X, next.Y})
+		// check for blocking walls
+		if !s.Maze.CanMoveBetween(player.GetPos(), next) {
+			continue
+		}
+
+		positions = append(positions, next)
 	}
-	next.X = player.GetPos().X
 
 	return positions
 }
 
 // MoveUser changes the current position of a user to the nextPos
-// TODO: Test
-func (s *State) MoveUser(playerID int64, nextPos Pos) {
+func (s *State) MoveUser(playerID int64, nextPos Pos) bool {
+	if s.done {
+		return false
+	}
+
 	player := s.Players[playerID]
 
-	if s.Maze.CanMoveBetween(player.GetPos(), nextPos) {
-		player.SetPos(nextPos)
+	if !s.Maze.CanMoveBetween(player.GetPos(), nextPos) {
+		return false
 	}
+
+	player.setPos(nextPos)
+	if s.hasWon(player.ID) {
+		s.done = true
+	}
+
+	return true
+}
+
+// GetWinner of game
+func (s *State) GetWinner() int64 {
+	if !s.done {
+		return 0
+	}
+
+	for id := range s.Players {
+		if s.hasWon(id) {
+			return id
+		}
+	}
+
+	return 0
+}
+
+func (s *State) hasWon(playerID int64) bool {
+	pos := s.Players[playerID].Pos
+	if pos.X == s.Maze.TrashPos.X && pos.Y == s.Maze.TrashPos.Y {
+		return true
+	}
+
+	return false
 }
 
 func hasVisited(pos Pos, visited []Pos) bool {

@@ -10,63 +10,12 @@ import (
 	"github.com/tylergeery/trash_hunt/tcp_server/game"
 )
 
-var (
-	messageStatusPending   = 0
-	messageError           = 1
-	messageInitGame        = 2
-	messageUpdateGameState = 3
-)
-
-// GameMessage is event sent to client through connection
-type GameMessage struct {
-	Event int    `json:"event"`
-	Data  string `json:"data"`
-}
-
-// NewGameMessage creates a new event to send to client
-func NewGameMessage(event int, data string) GameMessage {
-	return GameMessage{event, data}
-}
-
-// ToBytes gets a game message as byte slice to send to client
-func (gm GameMessage) ToBytes() []byte {
-	bytes, err := json.Marshal(gm)
-	if err != nil {
-		fmt.Println("GameMessage Marshal error:", err.Error())
-	}
-
-	return bytes
-}
-
-// GameSetUp is the obect for different game settings
-type GameSetUp struct {
-	UserToken  string `json:"user_token"`
-	Opponent   int64  `json:"opponent"`
-	Difficulty string `json:"difficulty"`
-}
-
-// Move is a move that a client wants to make
-type Move struct {
-	pos      game.Pos
-	matchID  int64
-	playerID int64
-}
-
-// NewMove returns a new game move object
-func NewMove(pos game.Pos, matchID, playerID int64) Move {
-	return Move{
-		pos:      pos,
-		matchID:  matchID,
-		playerID: playerID,
-	}
-}
-
 // Client holds the client player information
 type Client struct {
 	conn          Connection
 	matchID       int64
-	moveChan      chan Move
-	notifications chan int
+	moveChan      chan Move // For sending moves to manager
+	notifications chan int  // For receiving events from manager/arena
 	player        *game.Player
 	preferences   GameSetUp
 }
@@ -96,7 +45,6 @@ func (c *Client) SetUpUser() error {
 	}
 
 	c.preferences = gameSetUp
-	fmt.Println(gameSetUp)
 	playerID, err := auth.GetPlayerIDFromAccessToken(strings.TrimRight(gameSetUp.UserToken, " \n\t"))
 	fmt.Printf("Client: token %s\n", gameSetUp.UserToken)
 	if err != nil {
@@ -131,32 +79,30 @@ func (c *Client) GetMove() (string, error) {
 
 func (c *Client) processGame() {
 	for {
+		var pos game.Pos
 		fmt.Println("Client: processing game...")
-		move, err := c.conn.gatherInput(make([]byte, 5))
+		clientMove, err := c.conn.gatherInput(make([]byte, 5))
 		if err != nil {
 			fmt.Printf("Client: ending game, %s\n", err)
 			return
 		}
 
-		switch move {
+		switch clientMove {
 		case "l":
-			pos := game.Pos{X: c.player.Pos.X - 1, Y: c.player.Pos.Y}
-			move := NewMove(pos, c.matchID, c.player.ID)
-			c.moveChan <- move
+			pos = game.Pos{X: c.player.Pos.X - 1, Y: c.player.Pos.Y}
 		case "r":
-			pos := game.Pos{X: c.player.Pos.X + 1, Y: c.player.Pos.Y}
-			move := NewMove(pos, c.matchID, c.player.ID)
-			c.moveChan <- move
+			pos = game.Pos{X: c.player.Pos.X + 1, Y: c.player.Pos.Y}
 		case "u":
-			pos := game.Pos{X: c.player.Pos.X, Y: c.player.Pos.Y - 1}
-			move := NewMove(pos, c.matchID, c.player.ID)
-			c.moveChan <- move
+			pos = game.Pos{X: c.player.Pos.X, Y: c.player.Pos.Y - 1}
 		case "d":
-			pos := game.Pos{X: c.player.Pos.X, Y: c.player.Pos.Y + 1}
-			move := NewMove(pos, c.matchID, c.player.ID)
-			c.moveChan <- move
+			pos = game.Pos{X: c.player.Pos.X, Y: c.player.Pos.Y + 1}
+		default:
+			fmt.Printf("Client: unknown move: %s", clientMove)
+			continue
 		}
 
+		move := NewMove(pos, c.matchID, c.player.ID)
+		c.moveChan <- move
 	}
 }
 
@@ -170,15 +116,16 @@ func (c *Client) WaitForStart() {
 		return
 	}
 
-	select {
-	case move := <-c.notifications:
-		if move == 1 {
-			// game start move
-			c.processGame()
+	defer func() {
+		fmt.Println("Client: game finished")
+	}()
 
-			return
+	select {
+	case event := <-c.notifications:
+		if event == eventStartGame {
+			c.processGame()
 		}
-		fmt.Printf("Client: Received move before game started (%s)\n", string(move))
+
+		fmt.Printf("Client: Received move before game started (%s)\n", string(event))
 	}
-	fmt.Println("Client: game finished")
 }

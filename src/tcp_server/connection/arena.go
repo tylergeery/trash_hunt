@@ -2,14 +2,15 @@ package connection
 
 import (
 	"encoding/json"
-	"fmt"
 
+	"github.com/tylergeery/trash_hunt/model"
 	"github.com/tylergeery/trash_hunt/tcp_server/game"
 )
 
 // Arena holds all the information about clients and the active game
 type Arena struct {
 	state   *game.State
+	match   *model.Game
 	clients []*Client
 }
 
@@ -21,27 +22,22 @@ func NewArena(p1, p2 *game.Player, clients ...*Client) *Arena {
 	}
 }
 
-func (a *Arena) start(matchID int64, moveChan chan Move) {
+func (a *Arena) start(match *model.Game, moveChan chan Move) {
+	a.match = match
+	a.state.StartWithDifficulty(10)
+
 	// TODO: DO better than this, this will race
 	for i := range a.clients {
-		if a.clients[i] == nil {
-			continue
-		}
-
-		a.clients[i].matchID = matchID
+		a.clients[i].matchID = match.ID
 		a.clients[i].moveChan = moveChan
 	}
 
-	a.notifyClients(1)
+	a.notifyClients(eventStartGame)
 	a.sendInitialState()
 }
 
 func (a *Arena) notifyClients(move int) {
 	for i := range a.clients {
-		if a.clients[i] == nil {
-			continue
-		}
-
 		a.clients[i].notifications <- move
 	}
 }
@@ -56,33 +52,29 @@ func (a *Arena) sendInitialState() {
 	}
 }
 
-// MoveUser changes the current position of a user to the nextPos
-// TODO: Test
-func (a *Arena) MoveUser(playerID int64, nextPos game.Pos) {
-	a.state.MoveUser(playerID, nextPos)
-	difficulty := 1
+func (a *Arena) moveUser(playerID int64, nextPos game.Pos) {
+	moved := a.state.MoveUser(playerID, nextPos)
+	if !moved {
+		return
+	}
+
 	for id := range a.state.Players {
 		if id == playerID {
 			continue
 		}
-		if id == -1 {
+		if id < 0 {
 			// move computer player (as response)
-			solver := NewSolver(difficulty)
-			a.state.MoveUser(-1, solver.GetMove(-1, a.state))
+			nextMove := a.state.Players[id].Solver.GetMove(id, a.state)
+			_ = a.state.MoveUser(id, nextMove)
 		}
 	}
 }
 
 func (a *Arena) sendPositions() {
 	message, _ := json.Marshal(a.state.Players)
-	fmt.Printf("Arena: sending positions: %s", message)
 	positions := string(message)
 
 	for i := range a.clients {
-		if a.clients[i] == nil {
-			continue
-		}
-
 		msg := NewGameMessage(messageUpdateGameState, positions)
 		a.clients[i].conn.respond(msg)
 	}

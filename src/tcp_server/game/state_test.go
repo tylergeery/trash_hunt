@@ -93,8 +93,7 @@ func TestFindAvailableMoves(t *testing.T) {
 
 	for _, test := range testCases {
 		p1.Pos = test.p
-		visited := []Pos{}
-		moves := state.findAvailableMoves(p1, visited)
+		moves := state.findAvailableMoves(p1)
 
 		if len(moves) != len(test.exp) {
 			t.Fatalf("Moves had len: %d, but expected length: %d", len(moves), len(test.exp))
@@ -104,6 +103,43 @@ func TestFindAvailableMoves(t *testing.T) {
 			if moves[i].X != test.exp[i].X {
 				t.Fatalf("Expected move %d to have Pos (%d, %d), but had (%d, %d)", i, test.exp[i].X, test.exp[i].Y, moves[i].X, moves[i].Y)
 			}
+		}
+	}
+}
+
+func TestMoveUser(t *testing.T) {
+	p1 := NewPlayer(3)
+	p2 := NewPlayer(11)
+	state := NewState(p1, p2)
+
+	type TestCase struct {
+		player   *Player
+		orig     Pos
+		next     Pos
+		expected Pos
+		result   bool
+	}
+	cases := []TestCase{
+		TestCase{p1, Pos{0, 0}, Pos{1, 1}, Pos{0, 0}, false},
+		TestCase{p1, Pos{0, 0}, Pos{0, 1}, Pos{0, 1}, true},
+		TestCase{p2, Pos{9, 9}, Pos{9, 8}, Pos{9, 8}, true},
+		TestCase{p2, Pos{9, 9}, Pos{3, 3}, Pos{9, 9}, false},
+	}
+
+	for _, c := range cases {
+		c.player.setPos(c.orig)
+		if state.MoveUser(c.player.ID, c.next) != c.result {
+			t.Fatalf(
+				"User moving from %+v to %+v, did not received expected result: %t",
+				c.orig, c.next, c.result,
+			)
+		}
+
+		if c.player.Pos.X != c.expected.X || c.player.Pos.Y != c.expected.Y {
+			t.Fatalf(
+				"User moving from %+v to %+v, did not end at expected %+v, but instead %+v",
+				c.orig, c.next, c.expected, c.player.Pos,
+			)
 		}
 	}
 }

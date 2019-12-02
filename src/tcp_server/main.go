@@ -16,25 +16,8 @@ const connectionCount = 100
 var manager *connection.Manager
 
 func main() {
-	service := ":8080"
-	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
-	if err != nil {
-		panic(err)
-	}
-
 	// set up game manager
 	manager = connection.NewManager(connectionCount)
-
-	// set up thread pool
-	for i := 0; i < connectionCount; i++ {
-		go handleConnection(manager)
-	}
-
-	// accept connections
-	listener, err := net.ListenTCP("tcp", tcpAddr)
-	if err != nil {
-		panic(err)
-	}
 
 	// start manager routine for ng matching clients
 	go manager.Start()
@@ -44,21 +27,8 @@ func main() {
 	// handle websocket connections
 	go acceptSocketConnections(manager)
 
-	// pass connections to pool
-	for {
-		conn, err := listener.AcceptTCP()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Connection accept error: %s", err.Error())
-			continue
-		}
-
-		// handle cleanup
-		conn.SetReadDeadline(time.Now().Add(10 * time.Minute)) // TODO: game duration
-		conn.SetKeepAlive(true)
-		defer conn.Close()
-
-		manager.InitCh <- connection.NewTCPConnection(conn)
-	}
+	// main routine
+	acceptTCPConnections(manager)
 }
 
 func acceptSocketConnections(manager *connection.Manager) {
@@ -88,7 +58,7 @@ func acceptSocketConnections(manager *connection.Manager) {
 		manager.InitCh <- connection.NewSocketConnection(conn)
 
 		for connOpen {
-			// TODO: DO better
+			// TODO: Do better, maybe a lock or waitGroup
 			time.Sleep(10 * time.Millisecond)
 		}
 		fmt.Println("Letting go of websocket connection")
@@ -96,6 +66,41 @@ func acceptSocketConnections(manager *connection.Manager) {
 
 	http.HandleFunc("/", handler)
 	http.ListenAndServe(":8081", nil)
+}
+
+func acceptTCPConnections(manager *connection.Manager) {
+	service := ":8080"
+	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
+	if err != nil {
+		panic(err)
+	}
+
+	// set up thread pool
+	for i := 0; i < connectionCount; i++ {
+		go handleConnection(manager)
+	}
+
+	// accept connections
+	listener, err := net.ListenTCP("tcp", tcpAddr)
+	if err != nil {
+		panic(err)
+	}
+
+	// pass connections to pool
+	for {
+		conn, err := listener.AcceptTCP()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Connection accept error: %s", err.Error())
+			continue
+		}
+
+		// handle cleanup
+		conn.SetReadDeadline(time.Now().Add(10 * time.Minute)) // TODO: game duration
+		conn.SetKeepAlive(true)
+		defer conn.Close()
+
+		manager.InitCh <- connection.NewTCPConnection(conn)
+	}
 }
 
 func handleConnection(manager *connection.Manager) {
