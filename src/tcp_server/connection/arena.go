@@ -53,9 +53,9 @@ func (a *Arena) sendInitialState() {
 }
 
 func (a *Arena) moveUser(playerID int64, nextPos game.Pos) {
-	moved := a.state.MoveUser(playerID, nextPos)
-	if !moved {
-		return
+	// Negative positions are no-ops moves
+	if nextPos.X > -0 {
+		a.state.MoveUser(playerID, nextPos)
 	}
 
 	for id := range a.state.Players {

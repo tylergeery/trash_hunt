@@ -24,24 +24,39 @@ func NewState(player1, player2 *Player) *State {
 
 	// initialize random trash position
 	s.Maze = NewMaze()
-	s.Maze.TrashPos.X = 1
-	s.Maze.TrashPos.Y = 9
+	s.Maze.TrashPos.X = rand.Intn(gameBoardSize)
+	s.Maze.TrashPos.Y = rand.Intn(gameBoardSize)
+
 	s.Players = make(map[int64]*Player)
 	s.Players[player1.GetID()] = player1
-	player1.setPos(Pos{
-		X: rand.Intn(gameBoardSize),
-		Y: rand.Intn(gameBoardSize),
-	})
 	s.Players[player2.GetID()] = player2
-	player2.setPos(Pos{
-		X: rand.Intn(gameBoardSize),
-		Y: rand.Intn(gameBoardSize),
-	})
+
+	// TODO: Do better to try and make the games "fair"
+	for true {
+		pos1 := Pos{rand.Intn(gameBoardSize), rand.Intn(gameBoardSize)}
+		pos2 := Pos{rand.Intn(gameBoardSize), rand.Intn(gameBoardSize)}
+
+		if pos1.X == pos2.X && pos1.Y == pos2.Y {
+			continue
+		}
+
+		if pos1.X == s.Maze.TrashPos.X && pos1.Y == s.Maze.TrashPos.Y {
+			continue
+		}
+
+		if pos2.X == s.Maze.TrashPos.X && pos2.Y == s.Maze.TrashPos.Y {
+			continue
+		}
+
+		player1.setPos(pos1)
+		player2.setPos(pos2)
+		break
+	}
 
 	return &s
 }
 
-// StartWithDifficulty - Creates new game state with specified difficulty
+// StartWithDifficulty creates new game state with specified difficulty
 func (s *State) StartWithDifficulty(difficulty int) {
 	// keep adding walls as long as both user can solve
 	for i := 0; i < difficulty; {
@@ -59,7 +74,7 @@ func (s *State) StartWithDifficulty(difficulty int) {
 	}
 }
 
-// IsValid - ensure maze is valid
+// IsValid checks if maze is valid
 func (s *State) IsValid() bool {
 	// Players can share outcomes and visited state
 	outcomes := map[string]bool{}
@@ -75,7 +90,7 @@ func (s *State) IsValid() bool {
 	return true
 }
 
-// PlayerCanFinish - can the given player finish?
+// PlayerCanFinish checks if the given player finish
 func (s *State) PlayerCanFinish(player *Player, outcomes map[string]bool, visited []Pos) bool {
 	if player.GetPos().X == s.Maze.TrashPos.X && player.GetPos().Y == s.Maze.TrashPos.Y {
 		return true

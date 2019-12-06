@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/tylergeery/trash_hunt/auth"
 	"github.com/tylergeery/trash_hunt/model"
@@ -18,6 +19,7 @@ type Client struct {
 	notifications chan int  // For receiving events from manager/arena
 	player        *game.Player
 	preferences   GameSetUp
+	lastMoveTime  time.Time
 }
 
 // NewClient returns a new active client
@@ -87,21 +89,30 @@ func (c *Client) processGame() {
 			return
 		}
 
+		// Ensure that they don't move more than 1 time per sec
+		if time.Now().Sub(c.lastMoveTime).Seconds() < 1 {
+			fmt.Printf("Client: moving too fast: %s", c.lastMoveTime)
+			continue
+		}
+
 		switch clientMove {
 		case "l":
-			pos = game.Pos{X: c.player.Pos.X - 1, Y: c.player.Pos.Y}
+			pos = game.Pos{c.player.Pos.X - 1, c.player.Pos.Y}
 		case "r":
-			pos = game.Pos{X: c.player.Pos.X + 1, Y: c.player.Pos.Y}
+			pos = game.Pos{c.player.Pos.X + 1, c.player.Pos.Y}
 		case "u":
-			pos = game.Pos{X: c.player.Pos.X, Y: c.player.Pos.Y - 1}
+			pos = game.Pos{c.player.Pos.X, c.player.Pos.Y - 1}
 		case "d":
-			pos = game.Pos{X: c.player.Pos.X, Y: c.player.Pos.Y + 1}
+			pos = game.Pos{c.player.Pos.X, c.player.Pos.Y + 1}
+		case "0": // no-op move
+			pos = game.Pos{-1, -1}
 		default:
-			fmt.Printf("Client: unknown move: %s", clientMove)
+			fmt.Printf("Client: unknown move: %s\n", clientMove)
 			continue
 		}
 
 		move := NewMove(pos, c.matchID, c.player.ID)
+		c.lastMoveTime = time.Now()
 		c.moveChan <- move
 	}
 }
