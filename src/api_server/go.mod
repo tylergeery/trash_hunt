@@ -12,7 +12,6 @@ require (
 	github.com/goware/emailx v0.2.0
 	github.com/lib/pq v1.2.0
 	github.com/stretchr/testify v1.3.0 // indirect
-	github.com/tylergeery/pick-up-api v0.0.0-20170402005755-e87e650a0e02
 	github.com/tylergeery/trash_hunt/auth v0.0.0
 	github.com/tylergeery/trash_hunt/model v0.0.0
 	github.com/tylergeery/trash_hunt/storage v0.0.0
