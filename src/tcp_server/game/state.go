@@ -164,31 +164,30 @@ func (s *State) findAvailableMoves(player *Player) []Pos {
 }
 
 // MoveUser changes the current position of a user to the nextPos
-func (s *State) MoveUser(playerID int64, nextPos Pos) bool {
+func (s *State) MoveUser(playerID int64, nextPos Pos) error {
 	if s.done {
-		return false
+		return fmt.Errorf("game is already over")
 	}
 
 	player := s.Players[playerID]
 
 	// Ensure that they don't move more than 1 time per sec
 	if time.Now().Sub(player.lastMoveTime).Nanoseconds() < 100000000 {
-		fmt.Printf("State: player (%d) moving too fast: %s, %s", playerID, player.lastMoveTime, time.Now())
-		return false
+		fmt.Printf("State: player (%d) moving too fast: %s, %s\n", playerID, player.lastMoveTime, time.Now())
+		return fmt.Errorf("player moving too quickly")
 	}
 
 	if !s.Maze.CanMoveBetween(player.GetPos(), nextPos) {
-		return false
-	}
-
-	if s.hasWon(player.ID) {
-		s.SetWinner(player.ID)
+		return nil
 	}
 
 	player.setPos(nextPos)
 	player.lastMoveTime = time.Now()
+	if s.hasWon(player.ID) {
+		s.SetWinner(player.ID)
+	}
 
-	return true
+	return nil
 }
 
 // SetWinner sets the winner of game
@@ -236,6 +235,10 @@ func (s *State) GetLoser() int64 {
 }
 
 func (s *State) hasWon(playerID int64) bool {
+	if s.done {
+		return s.winner == playerID
+	}
+
 	pos := s.Players[playerID].Pos
 	if pos.X == s.Maze.TrashPos.X && pos.Y == s.Maze.TrashPos.Y {
 		return true

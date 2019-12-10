@@ -85,7 +85,7 @@ func (m *Manager) updateState(move Move) *Manager {
 	arena, ok := m.active[move.matchID]
 	if !ok {
 		fmt.Printf("Manager: got move for unknown game (%d)", move.matchID)
-		return
+		return m
 	}
 
 	arena.moveUser(move.playerID, move.pos)
@@ -94,6 +94,8 @@ func (m *Manager) updateState(move Move) *Manager {
 	if arena.HasWinner() {
 		m.endMatch(arena.match.ID)
 	}
+
+	return m
 }
 
 func (m *Manager) endMatch(matchID int64) *Manager {
@@ -101,6 +103,8 @@ func (m *Manager) endMatch(matchID int64) *Manager {
 	if !ok {
 		return m
 	}
+
+	fmt.Printf("Manager: ending game (%d)\n", matchID)
 
 	// end game, assigning winner and loser
 	arena.match.LoserID = arena.state.GetLoser()
