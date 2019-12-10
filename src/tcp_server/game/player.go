@@ -1,11 +1,14 @@
 package game
 
+import "time"
+
 // Player holds the user game-related player info
 type Player struct {
-	ID          int64 `json:"id"`
-	Pos         Pos   `json:"pos"`
-	preferences map[string]string
-	Solver      Solver `json:"-"`
+	ID           int64 `json:"id"`
+	Pos          Pos   `json:"pos"`
+	preferences  map[string]string
+	lastMoveTime time.Time
+	Solver       Solver `json:"-"`
 }
 
 // NewPlayer creates a game Player object

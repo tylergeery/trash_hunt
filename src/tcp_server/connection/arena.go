@@ -22,6 +22,35 @@ func NewArena(p1, p2 *game.Player, clients ...*Client) *Arena {
 	}
 }
 
+// HasWinner returns whether a winner has been acheived
+func (a *Arena) HasWinner() bool {
+	if a.state.GetWinner() != 0 {
+		return true
+	}
+
+	return false
+}
+
+func (a *Arena) end() {
+	if !a.HasWinner() {
+		return
+	}
+
+	type Results struct {
+		Winner int64 `json:"winner"`
+		Loser  int64 `json:"loser"`
+	}
+
+	results := Results{a.state.GetWinner(), a.state.GetLoser()}
+	message, _ := json.Marshal(results)
+
+	for i := range a.clients {
+		msg := NewGameMessage(messageEndGame, string(message))
+		a.clients[i].conn.respond(msg)
+		a.clients[i].notifications <- eventEndGame
+	}
+}
+
 func (a *Arena) start(match *model.Game, moveChan chan Move) {
 	a.match = match
 	a.state.StartWithDifficulty(10)

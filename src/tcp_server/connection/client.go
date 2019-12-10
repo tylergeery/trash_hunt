@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/tylergeery/trash_hunt/auth"
 	"github.com/tylergeery/trash_hunt/model"
@@ -19,7 +18,6 @@ type Client struct {
 	notifications chan int  // For receiving events from manager/arena
 	player        *game.Player
 	preferences   GameSetUp
-	lastMoveTime  time.Time
 }
 
 // NewClient returns a new active client
@@ -89,12 +87,6 @@ func (c *Client) processGame() {
 			return
 		}
 
-		// Ensure that they don't move more than 1 time per sec
-		if time.Now().Sub(c.lastMoveTime).Seconds() < 1 {
-			fmt.Printf("Client: moving too fast: %s", c.lastMoveTime)
-			continue
-		}
-
 		switch clientMove {
 		case "l":
 			pos = game.Pos{c.player.Pos.X - 1, c.player.Pos.Y}
@@ -112,7 +104,6 @@ func (c *Client) processGame() {
 		}
 
 		move := NewMove(pos, c.matchID, c.player.ID)
-		c.lastMoveTime = time.Now()
 		c.moveChan <- move
 	}
 }
@@ -131,12 +122,18 @@ func (c *Client) WaitForStart() {
 		fmt.Println("Client: game finished")
 	}()
 
-	select {
-	case event := <-c.notifications:
-		if event == eventStartGame {
-			c.processGame()
+	for true {
+		select {
+		case event := <-c.notifications:
+			switch event {
+			case eventStartGame:
+				c.processGame()
+				return
+			case eventEndGame:
+				return
+			default:
+				fmt.Printf("Client: Received unknown event before game started (%s)\n", string(event))
+			}
 		}
-
-		fmt.Printf("Client: Received move before game started (%s)\n", string(event))
 	}
 }

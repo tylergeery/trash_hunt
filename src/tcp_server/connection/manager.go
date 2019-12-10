@@ -43,9 +43,8 @@ func (m *Manager) waitForEvents() {
 			m.addPending(client).match()
 		case client := <-m.ExitCh:
 			fmt.Printf("Manager: removing client:(%d)\n", client.player.ID)
-			m.removePending(client).endMatch(client)
+			m.removePending(client).assignLoser(client).endMatch(client.matchID)
 		case move := <-m.ActiveCh:
-			fmt.Printf("Manager: got move from client: (%d) (%d, %d)\n", move.playerID, move.pos.X, move.pos.Y)
 			arena, ok := m.active[move.matchID]
 			if !ok {
 				fmt.Printf("Manager: got move for unknown game (%d)", move.matchID)
@@ -54,6 +53,10 @@ func (m *Manager) waitForEvents() {
 
 			arena.moveUser(move.playerID, move.pos)
 			arena.sendPositions()
+
+			if arena.HasWinner() {
+				m.endMatch(arena.match.ID)
+			}
 		}
 	}
 }
@@ -69,32 +72,41 @@ func (m *Manager) addPending(client *Client) *Manager {
 	return m
 }
 
-func (m *Manager) removePending(client *Client) *Manager {
-	delete(m.pending, client.player.ID)
-
-	return m
-}
-
-func (m *Manager) endMatch(client *Client) *Manager {
+func (m *Manager) assignLoser(client *Client) *Manager {
 	arena, ok := m.active[client.matchID]
 	if !ok {
 		return m
 	}
 
-	// end game, assigning winner and loser
-	arena.match.Status = model.GameStatusComplete
-	arena.match.LoserID = client.player.ID
-	arena.match.EndedAt = time.Now()
+	fmt.Printf("Manager: assigning loser for match (%d), player (%d)", client.matchID, client.player.ID)
+	arena.state.SetLoser(client.player.ID)
 
-	for i := range arena.state.Players {
-		if arena.state.Players[i].ID != client.player.ID {
-			arena.match.WinnerID = arena.state.Players[i].ID
-			break
-		}
+	return m
+}
+
+func (m *Manager) removePending(client *Client) *Manager {
+	client.notifications <- eventEndGame
+
+	delete(m.pending, client.player.ID)
+
+	return m
+}
+
+func (m *Manager) endMatch(matchID int64) *Manager {
+	arena, ok := m.active[matchID]
+	if !ok {
+		return m
 	}
-	arena.match.Save()
 
-	delete(m.active, client.matchID)
+	// end game, assigning winner and loser
+	arena.match.LoserID = arena.state.GetLoser()
+	arena.match.WinnerID = arena.state.GetWinner()
+	arena.match.Status = model.GameStatusComplete
+	arena.match.EndedAt = time.Now()
+	arena.match.Save()
+	arena.end()
+
+	delete(m.active, matchID)
 
 	return m
 }

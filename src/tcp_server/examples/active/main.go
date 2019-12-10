@@ -73,8 +73,8 @@ func main() {
 	defer player2Conn.Close()
 
 	// Wait for game to match
-	str1 := connection.ReadStringFromConn(player1Conn, make([]byte, 1500))
-	str2 := connection.ReadStringFromConn(player2Conn, make([]byte, 1500))
+	str1 := connection.ReadStringFromConn(player1Conn, make([]byte, 2500))
+	str2 := connection.ReadStringFromConn(player2Conn, make([]byte, 2500))
 
 	var gameMessage1, gameMessage2 connection.GameMessage
 	_ = json.Unmarshal([]byte(str1), &gameMessage1)
@@ -87,6 +87,7 @@ func main() {
 	var state1, state2 game.State
 	_ = json.Unmarshal([]byte(gameMessage1.Data), &state1)
 	_ = json.Unmarshal([]byte(gameMessage2.Data), &state2)
+	fmt.Println(str1, gameMessage1.Data)
 
 	// Move one character and ensure the other receives the move
 	moves := []byte("lrud")
@@ -148,7 +149,7 @@ func main() {
 		)
 	}
 
-	// TODO: Move them both and ensure each receives the other
+	// TODO: Let one player leave and make sure results are recorded correctly
 
 	// Try to win?
 	fmt.Println("Game over")

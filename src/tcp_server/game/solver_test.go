@@ -2,10 +2,12 @@ package game
 
 import (
 	"testing"
+	"time"
 )
 
 func TestEasySolverCanSolve(t *testing.T) {
 	// Given
+	ogTime := time.Unix(time.Now().Unix()-1, 0)
 	p1, p2 := NewPlayer(1), NewPlayer(2)
 	p1.Solver = NewSolver(1)
 	state := NewState(p1, p2)
@@ -18,7 +20,9 @@ func TestEasySolverCanSolve(t *testing.T) {
 
 	for i := 0; i < totalPossibleMoves; i++ {
 		nextPos := p1.Solver.GetMove(1, state)
-		state.MoveUser(1, nextPos)
+		if state.MoveUser(1, nextPos) {
+			p1.lastMoveTime = ogTime
+		}
 		if state.GetWinner() == 1 {
 			solved = true
 			break
@@ -27,5 +31,9 @@ func TestEasySolverCanSolve(t *testing.T) {
 
 	if !solved {
 		t.Fatalf("Game was not solved by EasySolver")
+	}
+
+	if state.GetLoser() != 2 {
+		t.Fatalf("Expected Player 2 to be loser")
 	}
 }

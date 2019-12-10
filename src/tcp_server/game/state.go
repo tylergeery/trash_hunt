@@ -6,13 +6,15 @@ import (
 	"time"
 )
 
-const gameBoardSize = 10
+const gameBoardSize = 15
 
 // State controls all state related to the game playing
 type State struct {
 	Players map[int64]*Player `json:"players"`
 	Maze    *Maze             `json:"maze"`
 	done    bool
+	winner  int64
+	loser   int64
 }
 
 // NewState sets new maze and player/trash pos for gameplay
@@ -169,16 +171,50 @@ func (s *State) MoveUser(playerID int64, nextPos Pos) bool {
 
 	player := s.Players[playerID]
 
+	// Ensure that they don't move more than 1 time per sec
+	if time.Now().Sub(player.lastMoveTime).Seconds() < 1 {
+		fmt.Printf("State: player moving too fast: %s, %s", player.lastMoveTime, time.Now())
+		return false
+	}
+
 	if !s.Maze.CanMoveBetween(player.GetPos(), nextPos) {
 		return false
 	}
 
-	player.setPos(nextPos)
 	if s.hasWon(player.ID) {
-		s.done = true
+		s.SetWinner(player.ID)
 	}
 
+	player.setPos(nextPos)
+	player.lastMoveTime = time.Now()
+
 	return true
+}
+
+// SetWinner sets the winner of game
+func (s *State) SetWinner(winner int64) {
+	s.winner = winner
+	s.done = true
+
+	for id := range s.Players {
+		if winner != id {
+			s.loser = id
+			break
+		}
+	}
+}
+
+// SetLoser sets the loser of game
+func (s *State) SetLoser(loser int64) {
+	s.loser = loser
+	s.done = true
+
+	for id := range s.Players {
+		if loser != id {
+			s.winner = id
+			break
+		}
+	}
 }
 
 // GetWinner of game
@@ -187,13 +223,16 @@ func (s *State) GetWinner() int64 {
 		return 0
 	}
 
-	for id := range s.Players {
-		if s.hasWon(id) {
-			return id
-		}
+	return s.winner
+}
+
+// GetLoser of game
+func (s *State) GetLoser() int64 {
+	if !s.done {
+		return 0
 	}
 
-	return 0
+	return s.loser
 }
 
 func (s *State) hasWon(playerID int64) bool {
