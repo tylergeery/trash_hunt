@@ -45,18 +45,7 @@ func (m *Manager) waitForEvents() {
 			fmt.Printf("Manager: removing client:(%d)\n", client.player.ID)
 			m.removePending(client).assignLoser(client).endMatch(client.matchID)
 		case move := <-m.ActiveCh:
-			arena, ok := m.active[move.matchID]
-			if !ok {
-				fmt.Printf("Manager: got move for unknown game (%d)", move.matchID)
-				continue
-			}
-
-			arena.moveUser(move.playerID, move.pos)
-			arena.sendPositions()
-
-			if arena.HasWinner() {
-				m.endMatch(arena.match.ID)
-			}
+			m.updateState(move)
 		}
 	}
 }
@@ -90,6 +79,21 @@ func (m *Manager) removePending(client *Client) *Manager {
 	delete(m.pending, client.player.ID)
 
 	return m
+}
+
+func (m *Manager) updateState(move Move) *Manager {
+	arena, ok := m.active[move.matchID]
+	if !ok {
+		fmt.Printf("Manager: got move for unknown game (%d)", move.matchID)
+		return
+	}
+
+	arena.moveUser(move.playerID, move.pos)
+	arena.sendPositions()
+
+	if arena.HasWinner() {
+		m.endMatch(arena.match.ID)
+	}
 }
 
 func (m *Manager) endMatch(matchID int64) *Manager {
