@@ -67,3 +67,14 @@ func TestArena(t *testing.T) {
 		}
 	}
 }
+
+func TestCompleteGame(t *testing.T) {
+	p1 := game.NewPlayer(47)
+	p2 := game.NewPlayer(1147)
+	c1 := NewClient(&MockConnection{})
+	cl.player = p1
+	c2 := NewClient(&MockConnection{})
+	c2.player = p2
+
+	// TODO: assert game finish events
+}

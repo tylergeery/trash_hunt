@@ -32,10 +32,6 @@ func (a *Arena) HasWinner() bool {
 }
 
 func (a *Arena) end() {
-	if !a.HasWinner() {
-		return
-	}
-
 	type Results struct {
 		Winner int64 `json:"winner"`
 		Loser  int64 `json:"loser"`
@@ -47,8 +43,9 @@ func (a *Arena) end() {
 	for i := range a.clients {
 		msg := NewGameMessage(messageEndGame, string(message))
 		a.clients[i].conn.respond(msg)
-		a.clients[i].notifications <- eventEndGame
 	}
+
+	a.notifyClients(eventEndGame)
 }
 
 func (a *Arena) start(match *model.Game, moveChan chan Move) {

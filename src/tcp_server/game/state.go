@@ -172,8 +172,8 @@ func (s *State) MoveUser(playerID int64, nextPos Pos) bool {
 	player := s.Players[playerID]
 
 	// Ensure that they don't move more than 1 time per sec
-	if time.Now().Sub(player.lastMoveTime).Seconds() < 1 {
-		fmt.Printf("State: player moving too fast: %s, %s", player.lastMoveTime, time.Now())
+	if time.Now().Sub(player.lastMoveTime).Nanoseconds() < 100000000 {
+		fmt.Printf("State: player (%d) moving too fast: %s, %s", playerID, player.lastMoveTime, time.Now())
 		return false
 	}
 
