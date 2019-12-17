@@ -16,6 +16,7 @@ func TestEasySolverCanSolve(t *testing.T) {
 	totalPossibleMoves := (8 * 8 * 4) // squares with 4 DOF (middle board)
 	totalPossibleMoves += (8 * 4 * 3) // positions with 3  (side walls)
 	totalPossibleMoves += (4 * 2)     // positions only have 2 DOF (corners)
+	totalPossibleMoves *= 4           // possibly would need to backtrack in each direction
 	solved := false
 
 	for i := 0; i < totalPossibleMoves; i++ {
