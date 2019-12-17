@@ -20,9 +20,9 @@ func TestEasySolverCanSolve(t *testing.T) {
 
 	for i := 0; i < totalPossibleMoves; i++ {
 		nextPos := p1.Solver.GetMove(1, state)
-		if state.MoveUser(1, nextPos) {
-			p1.lastMoveTime = ogTime
-		}
+		p1.lastMoveTime = ogTime
+		state.MoveUser(p1.ID, nextPos)
+
 		if state.GetWinner() == 1 {
 			solved = true
 			break

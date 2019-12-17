@@ -34,6 +34,7 @@ func NewState(player1, player2 *Player) *State {
 	s.Players[player2.GetID()] = player2
 
 	// TODO: Do better to try and make the games "fair"
+	// Specifically users starting somewhat equidistant from trash
 	for true {
 		pos1 := Pos{rand.Intn(gameBoardSize), rand.Intn(gameBoardSize)}
 		pos2 := Pos{rand.Intn(gameBoardSize), rand.Intn(gameBoardSize)}
@@ -63,7 +64,7 @@ func (s *State) StartWithDifficulty(difficulty int) {
 	// keep adding walls as long as both user can solve
 	for i := 0; i < difficulty; {
 		// try adding a new wall
-		newWall := rand.Intn(gameBoardSize*(gameBoardSize-1)*4 + gameBoardSize*4)
+		newWall := rand.Intn(gameBoardSize * gameBoardSize * 4)
 		s.Maze.addWalls(newWall)
 
 		// Check maze is still solvable for both players
