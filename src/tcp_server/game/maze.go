@@ -92,6 +92,14 @@ func (m *Maze) hasWall(pos int) bool {
 
 // CanMoveBetween two positons (are there walls blocking?)
 func (m *Maze) CanMoveBetween(pos1, pos2 Pos) bool {
+	if pos1.X < 0 || pos2.X < 0 || pos1.Y < 0 || pos2.Y < 0 {
+		return false
+	}
+
+	if pos1.X >= gameBoardSize || pos2.X >= gameBoardSize || pos1.Y >= gameBoardSize || pos2.Y >= gameBoardSize {
+		return false
+	}
+
 	if pos1.X != pos2.X && pos1.Y != pos2.Y {
 		return false
 	}
