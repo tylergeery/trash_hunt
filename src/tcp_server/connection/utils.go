@@ -6,6 +6,7 @@ import (
 	"net"
 )
 
+// ReadStringFromConn reads connection input as string
 func ReadStringFromConn(conn net.Conn, chars []byte) string {
 	_, err := conn.Read(chars)
 	if err != nil {

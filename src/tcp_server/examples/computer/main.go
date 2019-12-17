@@ -71,7 +71,7 @@ func main() {
 	defer playerConn.Close()
 
 	// Wait for game to match
-	resp := connection.ReadStringFromConn(playerConn, make([]byte, 1500))
+	resp := connection.ReadStringFromConn(playerConn, make([]byte, 2500))
 	var gameMessage connection.GameMessage
 	_ = json.Unmarshal([]byte(resp), &gameMessage)
 

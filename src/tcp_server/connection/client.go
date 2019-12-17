@@ -89,15 +89,17 @@ func (c *Client) processGame() {
 
 		switch clientMove {
 		case "l":
-			pos = game.Pos{X: c.player.Pos.X - 1, Y: c.player.Pos.Y}
+			pos = game.Pos{c.player.Pos.X - 1, c.player.Pos.Y}
 		case "r":
-			pos = game.Pos{X: c.player.Pos.X + 1, Y: c.player.Pos.Y}
+			pos = game.Pos{c.player.Pos.X + 1, c.player.Pos.Y}
 		case "u":
-			pos = game.Pos{X: c.player.Pos.X, Y: c.player.Pos.Y - 1}
+			pos = game.Pos{c.player.Pos.X, c.player.Pos.Y - 1}
 		case "d":
-			pos = game.Pos{X: c.player.Pos.X, Y: c.player.Pos.Y + 1}
+			pos = game.Pos{c.player.Pos.X, c.player.Pos.Y + 1}
+		case "0": // no-op move
+			pos = game.Pos{-1, -1}
 		default:
-			fmt.Printf("Client: unknown move: %s", clientMove)
+			fmt.Printf("Client: unknown move: %s\n", clientMove)
 			continue
 		}
 
@@ -120,12 +122,18 @@ func (c *Client) WaitForStart() {
 		fmt.Println("Client: game finished")
 	}()
 
-	select {
-	case event := <-c.notifications:
-		if event == eventStartGame {
-			c.processGame()
+	for true {
+		select {
+		case event := <-c.notifications:
+			switch event {
+			case eventStartGame:
+				c.processGame()
+				return
+			case eventEndGame:
+				return
+			default:
+				fmt.Printf("Client: Received unknown event before game started (%s)\n", string(event))
+			}
 		}
-
-		fmt.Printf("Client: Received move before game started (%s)\n", string(event))
 	}
 }

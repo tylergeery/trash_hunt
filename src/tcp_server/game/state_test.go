@@ -2,6 +2,7 @@ package game
 
 import (
 	"testing"
+	"time"
 )
 
 func TestNewState(t *testing.T) {
@@ -65,6 +66,7 @@ func TestFindAvailableMoves(t *testing.T) {
 		exp []Pos
 	}
 
+	edge := gameBoardSize - 1
 	p1 := NewPlayer(1)
 	p2 := NewPlayer(1)
 	state := NewState(p1, p2)
@@ -78,12 +80,12 @@ func TestFindAvailableMoves(t *testing.T) {
 			exp: []Pos{Pos{2, 0}, Pos{1, 1}, Pos{0, 0}},
 		},
 		TestCase{
-			p:   Pos{9, 1},
-			exp: []Pos{Pos{9, 0}, Pos{9, 2}, Pos{8, 1}},
+			p:   Pos{edge, 1},
+			exp: []Pos{Pos{edge, 0}, Pos{edge, 2}, Pos{edge - 1, 1}},
 		},
 		TestCase{
-			p:   Pos{0, 9},
-			exp: []Pos{Pos{0, 8}, Pos{1, 9}},
+			p:   Pos{0, edge},
+			exp: []Pos{Pos{0, edge - 1}, Pos{1, edge}},
 		},
 		TestCase{
 			p:   Pos{5, 5},
@@ -96,7 +98,7 @@ func TestFindAvailableMoves(t *testing.T) {
 		moves := state.findAvailableMoves(p1)
 
 		if len(moves) != len(test.exp) {
-			t.Fatalf("Moves had len: %d, but expected length: %d", len(moves), len(test.exp))
+			t.Fatalf("Moves had len: %d, but expected length: %d, case: %+v, %+v", len(moves), len(test.exp), test, moves)
 		}
 
 		for i := range moves {
@@ -117,21 +119,31 @@ func TestMoveUser(t *testing.T) {
 		orig     Pos
 		next     Pos
 		expected Pos
-		result   bool
+		moved    bool
 	}
 	cases := []TestCase{
-		TestCase{p1, Pos{0, 0}, Pos{1, 1}, Pos{0, 0}, false},
+		TestCase{p1, Pos{0, 0}, Pos{1, 1}, Pos{0, 0}, true},
 		TestCase{p1, Pos{0, 0}, Pos{0, 1}, Pos{0, 1}, true},
 		TestCase{p2, Pos{9, 9}, Pos{9, 8}, Pos{9, 8}, true},
-		TestCase{p2, Pos{9, 9}, Pos{3, 3}, Pos{9, 9}, false},
+		TestCase{p2, Pos{9, 9}, Pos{3, 3}, Pos{9, 9}, true},
 	}
 
 	for _, c := range cases {
+		c.player.lastMoveTime = time.Unix(time.Now().Unix()-1, 0)
 		c.player.setPos(c.orig)
-		if state.MoveUser(c.player.ID, c.next) != c.result {
+		err := state.MoveUser(c.player.ID, c.next)
+
+		if c.moved && err != nil {
 			t.Fatalf(
-				"User moving from %+v to %+v, did not received expected result: %t",
-				c.orig, c.next, c.result,
+				"User moving from %+v to %+v, did not received expected result: %s",
+				c.orig, c.next, err,
+			)
+		}
+
+		if !c.moved && err == nil {
+			t.Fatalf(
+				"User moving from %+v to %+v, did not received expected result",
+				c.orig, c.next,
 			)
 		}
 
@@ -141,5 +153,36 @@ func TestMoveUser(t *testing.T) {
 				c.orig, c.next, c.expected, c.player.Pos,
 			)
 		}
+	}
+}
+
+func testMoveUserErrorMovingTooQuickly(t *testing.T) {
+	// Given
+	player := NewPlayer(55)
+	state := NewState(player, NewPlayer(5))
+	player.setPos(Pos{0, 0})
+	player.lastMoveTime = time.Now()
+
+	// When
+	err := state.MoveUser(player.ID, Pos{0, 1})
+
+	// Then
+	if err == nil {
+		t.Fatalf("Expected error for user moving too quickly: %s - %s", player.lastMoveTime, time.Now())
+	}
+}
+
+func testMoveUserErrorGameComplete(t *testing.T) {
+	// Given
+	player := NewPlayer(55)
+	state := NewState(player, NewPlayer(5))
+	state.done = true
+
+	// When
+	err := state.MoveUser(player.ID, Pos{0, 1})
+
+	// Then
+	if err == nil {
+		t.Fatal("Expected error for game being complete")
 	}
 }

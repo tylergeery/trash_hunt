@@ -12,6 +12,7 @@ var (
 	messageError           = 1
 	messageInitGame        = 2
 	messageUpdateGameState = 3
+	messageEndGame         = 4
 
 	eventStartGame = 1
 	eventEndGame   = 2

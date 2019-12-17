@@ -102,6 +102,7 @@ func TestCanMoveBetween(t *testing.T) {
 		exp  bool
 	}
 
+	edge := gameBoardSize - 1
 	output := map[bool]string{true: "to be able", false: "to not be able"}
 	maze := NewMaze()
 	testCases := []TestCase{
@@ -121,13 +122,13 @@ func TestCanMoveBetween(t *testing.T) {
 			exp:  false,
 		},
 		TestCase{
-			pos1: Pos{8, 8},
-			pos2: Pos{9, 9},
+			pos1: Pos{edge - 1, edge - 1},
+			pos2: Pos{edge, edge},
 			exp:  false,
 		},
 		TestCase{
-			pos1: Pos{9, 9},
-			pos2: Pos{9, 10},
+			pos1: Pos{edge, edge},
+			pos2: Pos{edge, edge + 1},
 			exp:  false,
 		},
 		TestCase{
@@ -141,8 +142,8 @@ func TestCanMoveBetween(t *testing.T) {
 			exp:  true,
 		},
 		TestCase{
-			pos1: Pos{4, 9},
-			pos2: Pos{4, 8},
+			pos1: Pos{4, edge},
+			pos2: Pos{4, edge - 1},
 			exp:  true,
 		},
 		TestCase{
@@ -151,8 +152,8 @@ func TestCanMoveBetween(t *testing.T) {
 			exp:  true,
 		},
 		TestCase{
-			pos1: Pos{9, 1},
-			pos2: Pos{9, 2},
+			pos1: Pos{edge, 1},
+			pos2: Pos{edge, 2},
 			exp:  true,
 		},
 	}
