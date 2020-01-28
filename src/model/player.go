@@ -14,7 +14,9 @@ import (
 
 const minPasswordLength = 8
 
+// PlayerStatusActive player status
 const PlayerStatusActive = 1
+// PlayerStatusRemoved player status
 const PlayerStatusRemoved = 2
 
 // Player is a given player in the game
@@ -22,8 +24,7 @@ type Player struct {
 	ID         int64  `json:"id"`
 	Email      string `json:"email"`
 	pw         string
-	Name       string `json:"name"`
-	FacebookID string `json:"facebook_id"`
+	Username       string `json:"username"`
 	Token      string `json:"token"`
 	Status     int    `json:"status"`
 	CreatedAt  string `json:"created_at"`
@@ -33,22 +34,20 @@ type Player struct {
 // PlayerPublicProfile is a given player in the game
 type PlayerPublicProfile struct {
 	ID   int64  `json:"id"`
-	Name string `json:"name"`
+	Username string `json:"username"`
 }
 
 var createColumns = []string{
 	"email",
-	"name",
+	"username",
 	"password",
-	"facebook_id",
 	"token",
 	"status",
 }
 var queryColumns = []string{
 	"id",
 	"email",
-	"name",
-	"facebook_id",
+	"username",
 	"token",
 	"status",
 	"created_at",
@@ -56,20 +55,18 @@ var queryColumns = []string{
 }
 var updateColumns = []string{
 	"email",
-	"name",
-	"facebook_id",
+	"username",
 	"token",
 	"status",
 }
 
 // PlayerNew - Constructor
-func PlayerNew(id int64, email, pw, name, facebookID, token string, status int, createdAt, updatedAt string) *Player {
+func PlayerNew(id int64, email, pw, username, token string, status int, createdAt, updatedAt string) *Player {
 	return &Player{
 		ID:         id,
 		Email:      email,
 		pw:         pw,
-		Name:       name,
-		FacebookID: facebookID,
+		Username:       username,
 		Token:      token,
 		Status:     status,
 		CreatedAt:  createdAt,
@@ -78,8 +75,8 @@ func PlayerNew(id int64, email, pw, name, facebookID, token string, status int, 
 }
 
 // PlayerRegister - register a new player
-func PlayerRegister(email, pw, name, facebookID string) (*Player, error) {
-	// Validate and hash password, or validate facebookID
+func PlayerRegister(email, pw, username string) (*Player, error) {
+	// Validate and hash password
 	if len(pw) < minPasswordLength {
 		return nil, fmt.Errorf("Password must be at least %d characters", minPasswordLength)
 	}
@@ -89,7 +86,7 @@ func PlayerRegister(email, pw, name, facebookID string) (*Player, error) {
 		return nil, err
 	}
 
-	p := PlayerNew(0, email, string(password), name, facebookID, "", PlayerStatusActive, "", "")
+	p := PlayerNew(0, email, string(password), username, "", PlayerStatusActive, "", "")
 
 	err = p.save()
 
@@ -171,7 +168,12 @@ func PlayerGetByToken(authToken string) *Player {
 
 // PlayerGetByEmail retrieves player based on email
 func PlayerGetByEmail(userEmail string) *Player {
-	query := fmt.Sprintf("SELECT id, email, password, name, facebook_id, token, status, created_at, updated_at FROM %s WHERE email=$1", storage.TABLE_PLAYER)
+	columns := append(queryColumns, "password")
+	query := fmt.Sprintf(
+		"SELECT %s FROM %s WHERE email = $1",
+		strings.Join(columns, ","),
+		storage.TABLE_PLAYER,
+	)
 
 	return scanPlayer(storage.FetchRow(query, userEmail), true)
 }
@@ -185,16 +187,16 @@ func (p *Player) ValidatePassword(pw string) error {
 func (p *Player) ToPublicProfile() *PlayerPublicProfile {
 	return &PlayerPublicProfile{
 		ID:   p.ID,
-		Name: p.Name,
+		Username: p.Username,
 	}
 }
 
 func (p *Player) toCreateValues() []interface{} {
-	return []interface{}{p.Email, p.Name, p.pw, p.FacebookID, p.Token, PlayerStatusActive}
+	return []interface{}{p.Email, p.Username, p.pw, p.Token, PlayerStatusActive}
 }
 
 func (p *Player) toUpdateValues() []interface{} {
-	return []interface{}{p.Email, p.Name, p.FacebookID, p.Token, p.Status}
+	return []interface{}{p.Email, p.Username, p.Token, p.Status}
 }
 
 func (p *Player) validate() error {
@@ -204,8 +206,8 @@ func (p *Player) validate() error {
 		return fmt.Errorf("Invalid email format: %s", p.Email)
 	}
 
-	if p.Name == "" {
-		return fmt.Errorf("Invalid name: %s", p.Name)
+	if p.Username == "" {
+		return fmt.Errorf("Invalid username: %s", p.Username)
 	}
 
 	// return error
@@ -219,9 +221,16 @@ func GetTestEmail(ident string) string {
 	return fmt.Sprintf("test%s%s@geerydev.com", ident, c)
 }
 
+// GetTestUsername provides a unique test username
+func GetTestUsername(ident string) string {
+	c := strconv.Itoa(int(time.Now().UnixNano()))
+
+	return fmt.Sprintf("testuser-%s-%s", ident, c)
+}
+
 // GetTestPlayer returns a unique test user
 func GetTestPlayer(ident string) *Player {
-	p, _ := PlayerRegister(GetTestEmail(ident), "saklfsdlkfsa", "asdflksas TLkdlsff", "")
+	p, _ := PlayerRegister(GetTestEmail(ident), "testpasstestpass", GetTestUsername(ident))
 
 	return p
 }
@@ -233,13 +242,13 @@ type playerScanner interface {
 func scanPlayer(scanner playerScanner, includePass bool) *Player {
 	var ID int64
 	var status int
-	var email, pw, name, facebookID, token, createdAt, updatedAt string
+	var email, pw, username, token, createdAt, updatedAt string
 
 	if includePass {
-		scanner.Scan(&ID, &email, &pw, &name, &facebookID, &token, &status, &createdAt, &updatedAt)
+		scanner.Scan(&ID, &email, &username, &token, &status, &createdAt, &updatedAt, &pw)
 	} else {
-		scanner.Scan(&ID, &email, &name, &facebookID, &token, &status, &createdAt, &updatedAt)
+		scanner.Scan(&ID, &email, &username, &token, &status, &createdAt, &updatedAt)
 	}
 
-	return PlayerNew(ID, email, pw, name, facebookID, token, status, createdAt, updatedAt)
+	return PlayerNew(ID, email, pw, username, token, status, createdAt, updatedAt)
 }

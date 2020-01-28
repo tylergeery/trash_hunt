@@ -10,7 +10,7 @@ import (
 
 func TestCreatingAndExtractingToken(t *testing.T) {
 	var playerID int64 = 296
-	player := model.PlayerNew(playerID, "", "", "", "", "", model.PlayerStatusActive, "", "")
+	player := model.PlayerNew(playerID, "", "", "", "", model.PlayerStatusActive, "", "")
 	token, err := CreateToken(player)
 
 	if err != nil || token == "" {

@@ -21,7 +21,7 @@ func PlayerCreate(c *routing.Context) error {
 	}
 
 	// insert new player into DB
-	player, err := model.PlayerRegister(req.Email, req.Pw, req.Name, req.FacebookID)
+	player, err := model.PlayerRegister(req.Email, req.Pw, req.Username)
 	if err != nil {
 		return routing.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -37,6 +37,7 @@ func PlayerCreate(c *routing.Context) error {
 		Player: player,
 		Token:  token,
 	}
+	c.Response.WriteHeader(http.StatusCreated)
 
 	return c.Write(resp)
 }
@@ -83,8 +84,7 @@ func PlayerUpdate(c *routing.Context) error {
 	player := model.PlayerGetByID(authID)
 
 	player.Email = req.Email
-	player.Name = req.Name
-	player.FacebookID = req.FacebookID
+	player.Username = req.Username
 	err = player.Update()
 
 	if err != nil {

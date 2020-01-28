@@ -36,7 +36,7 @@ func TestPlayerCreateFailures(t *testing.T) {
 				"email": "tyler@test.com",
 			},
 			http.StatusBadRequest,
-			"Invalid name: \n",
+			"Invalid username: \n",
 		},
 	}
 
@@ -55,7 +55,7 @@ func TestPlayerCreateFailures(t *testing.T) {
 // Tries to create player with re-used email
 func TestAttemptCreatePlayerAndCannotReuseEmail(t *testing.T) {
 	player := map[string]string{
-		"name":  "Test Player",
+		"username":  model.GetTestUsername("email-reuse"),
 		"pw":    "1234213kdsl;kdg",
 		"email": model.GetTestEmail("email-reuse"),
 	}
@@ -63,9 +63,9 @@ func TestAttemptCreatePlayerAndCannotReuseEmail(t *testing.T) {
 	body := strings.NewReader(string(playerEncoded))
 	resp := GetControllerResponse(t, "POST", "/v1/player/", body, map[string]string{"Content-Type": "application/json"})
 
-	test.ExpectEqualInt64s(t, int64(http.StatusOK), int64(resp.Result().StatusCode))
+	test.ExpectEqualInt64s(t, int64(http.StatusCreated), int64(resp.Result().StatusCode))
 
-	player["name"] = "Different Test Name"
+	player["username"] = "difftestname2"
 	playerEncoded, _ = json.Marshal(player)
 	body = strings.NewReader(string(playerEncoded))
 	resp = GetControllerResponse(t, "POST", "/v1/player/", body, map[string]string{"Content-Type": "application/json"})
@@ -77,9 +77,9 @@ func TestAttemptCreatePlayerAndCannotReuseEmail(t *testing.T) {
 
 func TestCreateUpdateAndDeletePlayer(t *testing.T) {
 	player := map[string]string{
-		"name":  "Test Player",
+		"username":  model.GetTestUsername("test-crud"),
 		"pw":    "1234213kdsl;kdg",
-		"email": model.GetTestEmail("email-reuse"),
+		"email": model.GetTestEmail("test-crud"),
 	}
 	playerEncoded, _ := json.Marshal(player)
 	body := strings.NewReader(string(playerEncoded))
@@ -89,9 +89,9 @@ func TestCreateUpdateAndDeletePlayer(t *testing.T) {
 	var createdPlayerResponse map[string]interface{}
 	_ = json.Unmarshal(createResponse, &createdPlayerResponse)
 
-	test.ExpectEqualInt64s(t, int64(http.StatusOK), int64(resp.Result().StatusCode))
+	test.ExpectEqualInt64s(t, int64(http.StatusCreated), int64(resp.Result().StatusCode))
 
-	player["name"] = "Different Test Name"
+	player["username"] = model.GetTestUsername("other-crud-name")
 	playerEncoded, _ = json.Marshal(player)
 	body = strings.NewReader(string(playerEncoded))
 	headers := map[string]string{"Content-Type": "application/json"}
@@ -103,7 +103,7 @@ func TestCreateUpdateAndDeletePlayer(t *testing.T) {
 	_ = json.Unmarshal(playerResponse, &updatedPlayer)
 
 	test.ExpectEqualInt64s(t, int64(http.StatusOK), int64(resp.Result().StatusCode))
-	test.ExpectEqualString(t, "Different Test Name", updatedPlayer.Name)
+	test.ExpectEqualString(t, player["username"], updatedPlayer.Username)
 
 	// Delete a player
 	headers = map[string]string{"Content-Type": "application/json"}
@@ -119,9 +119,9 @@ func TestCreateUpdateAndDeletePlayer(t *testing.T) {
 
 func TestResetPassword(t *testing.T) {
 	player := map[string]string{
-		"name":  "Test Player",
+		"username":  model.GetTestUsername("reset-password"),
 		"pw":    "1234213kdsl;kdg",
-		"email": model.GetTestEmail("email-reuse"),
+		"email": model.GetTestEmail("reset-password"),
 	}
 	playerEncoded, _ := json.Marshal(player)
 	body := strings.NewReader(string(playerEncoded))
@@ -131,7 +131,7 @@ func TestResetPassword(t *testing.T) {
 	var createdPlayerResponse map[string]interface{}
 	_ = json.Unmarshal(createResponse, &createdPlayerResponse)
 
-	test.ExpectEqualInt64s(t, int64(http.StatusOK), int64(resp.Result().StatusCode))
+	test.ExpectEqualInt64s(t, int64(http.StatusCreated), int64(resp.Result().StatusCode))
 
 	// TODO: reset password
 }
