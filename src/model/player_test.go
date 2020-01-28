@@ -10,30 +10,30 @@ import (
 
 func TestPlayerRegisterFailures(t *testing.T) {
 	type TestCase struct {
-		args [4]string
+		args [3]string
 		err  error
 	}
 	testCases := []TestCase{
 		TestCase{
-			args: [4]string{"", "asdffdssadf", "", ""},
+			args: [3]string{"", "asdffdssadf", ""},
 			err:  errors.New("Invalid email format: "),
 		},
 		TestCase{
-			args: [4]string{"test", "asdffdssadf", "", ""},
+			args: [3]string{"test", "asdffdssadf", ""},
 			err:  errors.New("Invalid email format: test"),
 		},
 		TestCase{
-			args: [4]string{"test@yahoo.com", "1234", "", ""},
+			args: [3]string{"test@yahoo.com", "1234", ""},
 			err:  errors.New("Password must be at least 8 characters"),
 		},
 		TestCase{
-			args: [4]string{"tyger@geerydev.com", "test1234", "", ""},
-			err:  errors.New("Invalid name: "),
+			args: [3]string{"tyger@geerydev.com", "test1234", ""},
+			err:  errors.New("Invalid username: "),
 		},
 	}
 
 	for _, test := range testCases {
-		_, err := PlayerRegister(test.args[0], test.args[1], test.args[2], test.args[3])
+		_, err := PlayerRegister(test.args[0], test.args[1], test.args[2])
 
 		if err == nil || fmt.Sprintf("%s", err) != fmt.Sprintf("%s", test.err) {
 			t.Fatalf("Expected err: %s, received: %s", test.err, err)
@@ -43,19 +43,20 @@ func TestPlayerRegisterFailures(t *testing.T) {
 
 func TestPlayerRegisterSuccess(t *testing.T) {
 	type TestCase struct {
-		args   [4]string
+		args   [3]string
 		player *Player
 	}
 	testEmail := GetTestEmail("success")
+	testUsername := GetTestUsername("success")
 	testCases := []TestCase{
 		TestCase{
-			args:   [4]string{testEmail, "asdffdssadf", "jk", ""},
-			player: PlayerNew(0, testEmail, "asdffdssadf", "jk", "", "", PlayerStatusActive, "", ""),
+			args:   [3]string{testEmail, "asdffdssadf", testUsername},
+			player: PlayerNew(0, testEmail, "asdffdssadf", testUsername, "", PlayerStatusActive, "", ""),
 		},
 	}
 
 	for _, test := range testCases {
-		p, err := PlayerRegister(test.args[0], test.args[1], test.args[2], test.args[3])
+		p, err := PlayerRegister(test.args[0], test.args[1], test.args[2])
 
 		if p.ID <= 0 {
 			t.Fatalf("Received invalid player ID: %d, err: %s", p.ID, err)
@@ -67,17 +68,15 @@ func TestPlayerRegisterSuccess(t *testing.T) {
 		if p.pw == test.player.pw {
 			t.Fatalf("Expected hashed player pw for: %s, received: %s", test.player.pw, p.pw)
 		}
-		if p.Name != test.player.Name {
-			t.Fatalf("Expected player name: %s, received: %s", p.Name, test.player.Name)
-		}
-		if p.FacebookID != test.player.FacebookID {
-			t.Fatalf("Expected player FacebookID: %s, received: %s", p.FacebookID, test.player.FacebookID)
+		if p.Username != test.player.Username {
+			t.Fatalf("Expected player name: %s, received: %s", p.Username, test.player.Username)
 		}
 		if p.Status != test.player.Status {
 			t.Fatalf("Expected player status: %d, received: %d", p.Status, test.player.Status)
 		}
 
 		playerByEmail := PlayerGetByEmail(p.Email)
+		fmt.Println("playerByEmail: ", playerByEmail)
 		if playerByEmail.ID != p.ID {
 			t.Fatalf("PlayerByEmail does not have the correct ID: %d", playerByEmail.ID)
 		}
@@ -87,7 +86,10 @@ func TestPlayerRegisterSuccess(t *testing.T) {
 func TestPlayerLogin(t *testing.T) {
 	email := GetTestEmail("login")
 	password := "saklfsdlkfsa"
-	p, _ := PlayerRegister(email, password, "asdflksas TLkdlsff", "")
+	p, err := PlayerRegister(email, password, GetTestUsername("login"))
+	if err != nil {
+		t.Fatalf("Unexpected register err; %s", err)
+	}
 
 	p1, err := PlayerLogin(email, password)
 	if err != nil {
@@ -105,9 +107,9 @@ func TestPlayerLogin(t *testing.T) {
 }
 
 func TestPlayerUpdateError(t *testing.T) {
-	p := PlayerNew(0, "test@test.com", "", "", "", "", PlayerStatusActive, "", "")
+	p := PlayerNew(0, "test@test.com", "", "", "", PlayerStatusActive, "", "")
 
-	p.Name = "Tester"
+	p.Username = "Tester"
 	err := p.Update()
 
 	if err == nil || fmt.Sprintf("%s", err) != "Could not update non-existent player" {
@@ -116,12 +118,12 @@ func TestPlayerUpdateError(t *testing.T) {
 }
 
 func TestPlayerUpdate(t *testing.T) {
-	p, _ := PlayerRegister(GetTestEmail("update"), "saklfsdlkfsa", "asdflksas TLkdlsff", "")
+	p, _ := PlayerRegister(GetTestEmail("update"), "saklfsdlkfsa", GetTestUsername("update"))
 
-	p.Name = "Tester"
+	p.Username = GetTestUsername("update2")
 	err := p.Update()
 
 	if err != nil {
-		t.Fatalf("Unexpected register err; %s", err)
+		t.Fatalf("Unexpected update err; %s", err)
 	}
 }

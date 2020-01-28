@@ -4,15 +4,13 @@ package requests
 type PlayerCreateRequest struct {
 	Email      string `json:"email"`
 	Pw         string `json:"pw"`
-	Name       string `json:"name"`
-	FacebookID string `json:"facebookID"`
+	Username       string `json:"username"`
 }
 
 // PlayerUpdateRequest - Request structure for PlayerUpdate request
 type PlayerUpdateRequest struct {
 	Email      string `json:"email"`
-	Name       string `json:"name"`
-	FacebookID string `json:"facebookID"`
+	Username       string `json:"username"`
 }
 
 // PlayerLoginRequest - Request structure for PlayerLogin request
