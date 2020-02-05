@@ -8,3 +8,6 @@ FROM base as dev
 
 ENV POSTGRES_USER 'dev'
 ENV POSTGRES_PASSWORD 'dev_secret'
+
+RUN useradd -ms /bin/bash user
+USER user

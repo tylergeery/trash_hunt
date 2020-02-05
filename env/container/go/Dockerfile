@@ -54,3 +54,6 @@ RUN apt-get update && apt-get install net-tools
 RUN go get -u github.com/githubnemo/CompileDaemon
 
 ENTRYPOINT CompileDaemon -log-prefix=false -build="go build -o /go/bin/trash_hunt_tcp_server ." -command="/go/bin/trash_hunt_tcp_server"
+
+RUN useradd -ms /bin/bash user
+USER user

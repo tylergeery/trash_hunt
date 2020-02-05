@@ -1,9 +1,3 @@
-container_redis=trash-hunt-redis
-container_postgres=trash-hunt-pg
-container_tcp_server=trash-hunt-tcp-server
-container_api_server=trash-hunt-api-server
-container_migrator=trash-hunt-db-migrator
-
 container_redis_dev=trash-hunt-redis-dev
 container_postgres_dev=trash-hunt-pg-dev
 container_tcp_server_dev=trash-hunt-tcp-server-dev
